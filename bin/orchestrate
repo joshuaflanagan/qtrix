@@ -1,0 +1,15 @@
+#!/usr/bin/env ruby
+$LOAD_PATH.unshift File.expand_path('../../lib', __FILE__)
+require 'orchestrator'
+require 'orchestrator/cli'
+
+begin
+  command_class = Orchestrator::CLI.get_command_class(ARGV.shift)
+  command = command_class.new
+  command.parse_options
+  command.exec
+rescue KeyError, NoMethodError
+  default = Orchestrator::CLI::Default.new
+  default.parse_options
+  puts default.opt_parser
+end
