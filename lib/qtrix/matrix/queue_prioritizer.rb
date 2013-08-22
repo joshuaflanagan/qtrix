@@ -55,7 +55,7 @@ module Qtrix
       end
 
       def starting_priority_for(queue)
-        queue.resource_percentage * 1000
+        queue.resource_percentage * 10000
       end
 
       def sum_of(entries)

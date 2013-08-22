@@ -129,7 +129,7 @@ pry(main)> Qtrix.operations
   :add_override,
   :remove_override,
   :overrides,
-  :queues_for!,
+  :fetch_queues,
   :clear!]
 ```
 
@@ -271,7 +271,7 @@ pry(main)> Qtrix.overrides :night
 ```
 
 ### Choosing Queues
-Anytime a worker host needs some queues for its workers, it should call the Qtrix#queues_for! method, passing its hostname and the number of workers to obtain queues for.  Overrides will be claimed first, then any additional queues will be obtained from the system that manages the desired distribution.
+Anytime a worker host needs some queues for its workers, it should call the Qtrix#fetch_queues method, passing its hostname and the number of workers to obtain queues for.  Overrides will be claimed first, then any additional queues will be obtained from the system that manages the desired distribution.
 
 ```ruby
 pry(main)> Qtrix.map_queue_weights A: 40, B: 30, C: 20, D: 10
@@ -280,29 +280,29 @@ pry(main)> Qtrix.map_queue_weights A: 40, B: 30, C: 20, D: 10
 pry(main)> Qtrix.add_override [:X, :Y], 1
 => true
 
-pry(main)> Qtrix.queues_for!("host1", 3)
+pry(main)> Qtrix.fetch_queues("host1", 3)
 => [[:X, :Y], [:A, :B, :C, :D], [:B, :C, :D, :A]]
 
-pry(main)> Qtrix.queues_for!("host2", 2)
+pry(main)> Qtrix.fetch_queues("host2", 2)
 => [[:C, :D, :A, :B],[:D, :A, :B, :C]]
 ```
 
 Subsequent calls will return the same list, unless the configuration has changed, in which case new queue lists will be returned according to the new configuration.
 
 ```ruby
-pry(main)> Qtrix.queues_for!("host1", 3)
+pry(main)> Qtrix.fetch_queues("host1", 3)
 => [[:X, :Y], [:A, :B, :C, :D], [:B, :C, :D, :A]]
 
-pry(main)> Qtrix.queues_for!("host2", 2)
+pry(main)> Qtrix.fetch_queues("host2", 2)
 => [[:C, :D, :A, :B],[:D, :A, :B, :C]]
 
 pry(main)> Qtrix.map_queue_weights A: 10, B: 20, C: 30, D: 40
 => 0
 
-pry(main)> Qtrix.queues_for!("host1", 3)
+pry(main)> Qtrix.fetch_queues("host1", 3)
 => [[:X, :Y], [:D, :C, :B, :A], [:C, :B, :A, :D]]
 
-pry(main)> Qtrix.queues_for!("host2", 2)
+pry(main)> Qtrix.fetch_queues("host2", 2)
 => [[:B, :A, :D, :C], [:A, :D, :C, :B]]
 ```
 

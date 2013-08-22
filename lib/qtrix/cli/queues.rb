@@ -52,8 +52,9 @@ Options include:
 
       def exec_behavior
         if config[:desired_distribution]
+          desired_dist = Qtrix.desired_distribution(config[:config_set])
           msg = "Queues:\n"
-          msg += Qtrix.desired_distribution.map(&stringify).join("\n")
+          msg += desired_dist.map(&stringify).join("\n")
           write(msg)
         elsif queue_weights
           map_queue_weights queue_weights

@@ -26,6 +26,7 @@ describe Qtrix::Matrix do
   let(:b_heads) {head_count_of(:B)}
   let(:c_heads) {head_count_of(:C)}
   let(:d_heads) {head_count_of(:D)}
+  let(:matrix) {Qtrix::Matrix.to_table}
 
   # Check to make sure that the following holds true for 4, 10 and 100
   # worker setups:
@@ -44,8 +45,8 @@ describe Qtrix::Matrix do
             B: 30,
             C: 20,
             D: 10
-          Qtrix::Matrix.queues_for!('host1', worker_count)
-          Qtrix::Matrix.queues_for!('host2', worker_count)
+          Qtrix::Matrix.fetch_queues('host1', worker_count)
+          Qtrix::Matrix.fetch_queues('host2', worker_count)
         end
 
         it "should maintain the desired distribution of queues" do
@@ -65,6 +66,12 @@ describe Qtrix::Matrix do
           a_heads.should be >= b_heads
           b_heads.should be >= c_heads
           c_heads.should be >= d_heads
+        end
+
+        it "should not have any duplicate queues in any rows" do
+          matrix.each do |row|
+            row.should == row.uniq
+          end
         end
       end
     end

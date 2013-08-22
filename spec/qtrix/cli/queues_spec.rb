@@ -60,7 +60,7 @@ describe Qtrix::CLI::Queues do
 
     it "should return the list from a specified config set" do
       Qtrix.create_configuration_set "night"
-      Qtrix.map_queue_weights B: 11
+      Qtrix.map_queue_weights "night", B: 11
       queues.parse_options(["-l", "-c", "night"])
       queues.exec
       stdout.should match /B/

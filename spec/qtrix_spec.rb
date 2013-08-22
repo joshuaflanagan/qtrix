@@ -137,7 +137,7 @@ describe Qtrix do
     end
   end
 
-  describe "#queues_for!" do
+  describe "#fetch_queues" do
     before(:each) do
       Qtrix.map_queue_weights \
         A: 4,
@@ -148,7 +148,7 @@ describe Qtrix do
 
     context "no overrides" do
       it "should pick a queue list for a worker from the matrix" do
-        result = Qtrix.queues_for!('host1', 1)
+        result = Qtrix.fetch_queues('host1', 1)
         result.should == [[:A, :B, :C, :D, :__orchestrated__]]
       end
     end
@@ -160,13 +160,13 @@ describe Qtrix do
 
       context "when requesting queus for fewer or equal workers as there are overrides" do
         it "should pick a queue list from the overrides" do
-          Qtrix.queues_for!('host1', 1).should == [[:Z]]
+          Qtrix.fetch_queues('host1', 1).should == [[:Z]]
         end
       end
 
       context "when requeues queues for more workers than there are overrides" do
         it "should choose queue lists from both overrides and the matrix" do
-          Qtrix.queues_for!('host1', 2)
+          Qtrix.fetch_queues('host1', 2)
             .should == [[:Z],[:A,:B,:C,:D,:__orchestrated__]]
         end
       end
@@ -176,10 +176,10 @@ describe Qtrix do
       it "it should appropriately distribute the queues." do
         first_expected = [[:A, :B, :C, :D, :__orchestrated__],
                           [:B, :A, :C, :D, :__orchestrated__]]
-        Qtrix.queues_for!('host1', 2).should == first_expected
+        Qtrix.fetch_queues('host1', 2).should == first_expected
         second_expected = [[:C, :A, :B, :D, :__orchestrated__],
                            [:D, :A, :B, :C, :__orchestrated__]]
-        Qtrix.queues_for!('host2', 2).should == second_expected
+        Qtrix.fetch_queues('host2', 2).should == second_expected
       end
     end
   end
@@ -190,7 +190,7 @@ describe Qtrix do
     let(:matrix_key) {Qtrix::Matrix::REDIS_KEY}
     before do
       Qtrix.map_queue_weights A: 0.4
-      Qtrix::Matrix.queues_for!("localhost", 2)
+      Qtrix::Matrix.fetch_queues("localhost", 2)
       Qtrix.add_override([:D, :A, :B, :C], 1)
     end
 

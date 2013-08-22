@@ -95,8 +95,12 @@ describe Qtrix::Queue do
           expect{Qtrix::Queue.map_queue_weights(c: 0)}.to raise_error
         end
 
+        it "should error when trying to save weight of > 1000" do
+          expect{Qtrix::Queue.map_queue_weights(d: 1000)}.to raise_error
+        end
+
         it "should blow away the matrix" do
-          matrix.queues_for!('host1', 1)
+          matrix.fetch_queues('host1', 1)
           matrix.to_table.should_not be_empty
           Qtrix::Queue.map_queue_weights \
             A: 1,

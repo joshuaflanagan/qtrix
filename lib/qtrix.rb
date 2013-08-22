@@ -157,10 +157,10 @@ module Qtrix
   # Retrieves lists of queues as appropriate to the overall system balance
   # for the number of workers specified for the given +hostname+.
 
-  def self.queues_for!(hostname, workers)
+  def self.fetch_queues(hostname, workers)
     overrides_queues = Qtrix::Override.overrides_for(hostname, workers)
     delta = workers - overrides_queues.size
-    matrix_queues = delta > 0 ? Matrix.queues_for!(hostname, delta) : []
+    matrix_queues = delta > 0 ? Matrix.fetch_queues(hostname, delta) : []
     overrides_queues + matrix_queues.map(&append_orchestrated_flag)
   end
 

@@ -4,7 +4,7 @@ describe Qtrix::Matrix::Analyzer do
   before(:each) do
     Qtrix.map_queue_weights A: 40, B: 30, C: 20, D: 10
   end
-  let(:matrix) {Qtrix::Matrix.queues_for!("host1", 4)}
+  let(:matrix) {Qtrix::Matrix.fetch_queues("host1", 4)}
 
   describe "#breakdown" do
     it "results in hash of queue names to arrays of counts in each column in the matrix" do

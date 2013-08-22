@@ -44,6 +44,7 @@ module Qtrix
         raise "empty name" if name.empty?
         raise "nil weight" if weight.nil?
         raise "weight of 0 or less" if weight <= 0
+        raise "weight cannot be > 999" if weight > 999
       end
 
       def high_low

@@ -22,7 +22,7 @@ module Qtrix
 
       def build
         [].tap do |result|
-          (1..workers).each do
+          workers.times.each do
             queues_for_row = queue_prioritizer.current_priority_queue
             build_row_for! hostname, queues_for_row
             result << queues_for_row.map(&:name)

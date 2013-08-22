@@ -33,7 +33,7 @@ module Qtrix
         Qtrix::Matrix.clear!
         Qtrix::Queue.clear!
         Qtrix::Queue.map_queue_weights(queue_weights)
-        Qtrix::Matrix.queues_for!(`hostname`, rows)
+        Qtrix::Matrix.fetch_queues(`hostname`, rows)
         breakdown(Qtrix::Matrix.to_table)
       end
 

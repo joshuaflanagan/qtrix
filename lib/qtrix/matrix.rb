@@ -55,7 +55,7 @@ module Qtrix
       # Obtain lists of queues for a number of worker processes
       # on a server identified by the hostname.  This works
       # within the current namespace only.
-      def queues_for!(*args)
+      def fetch_queues(*args)
         namespace, hostname, workers = extract_args(2, *args)
         QueuePicker.new(namespace, Reader, hostname, workers).pick!
       end

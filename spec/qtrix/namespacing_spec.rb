@@ -169,7 +169,7 @@ describe Qtrix::Namespacing do
         before do
           Qtrix.add_override(:transition_flood, ["A"], 1)
           Qtrix.map_queue_weights :transition_flood, B: 10
-          Qtrix::Matrix.queues_for!(:transition_flood, "host1", 2)
+          Qtrix::Matrix.fetch_queues(:transition_flood, "host1", 2)
         end
 
         it "should cascade deletes to data in the namespace" do

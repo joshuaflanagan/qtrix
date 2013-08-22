@@ -67,9 +67,10 @@ For more information about the subcommands, try:
     require 'qtrix/cli/overrides'
 
     @commands = {
-      config_sets: ConfigSets,
-      overrides:   Overrides,
-      queues:      Queues
+      config_sets:      ConfigSets,
+      overrides:        Overrides,
+      queues:           Queues,
+      :"config-sets" => ConfigSets,
     }
 
     def self.get_command_class(str)
