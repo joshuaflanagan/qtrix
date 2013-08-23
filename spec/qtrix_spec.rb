@@ -184,6 +184,35 @@ describe Qtrix do
         end
       end
     end
+
+    context "with no queue weightings defined" do
+      context "no overrides" do
+        it "should raise a configuration error" do
+          expect {
+            Qtrix.fetch_queues('host1', 1)
+          }.to raise_error Qtrix::ConfigurationError
+        end
+      end
+      context "with overrides" do
+        before(:each) do
+          Qtrix.add_override([:Z], 1)
+        end
+
+        context "when requesting queues for fewer or equal workers as there are overrides" do
+          it "should pick a queue list from the overrides" do
+            Qtrix.fetch_queues('host1', 1).should == [[:Z]]
+          end
+        end
+
+        context "when requesting queues for more workers than there are overrides" do
+          it "should raise a configuration error" do
+            expect {
+              Qtrix.fetch_queues('host1', 2)
+            }.to raise_error Qtrix::ConfigurationError
+          end
+        end
+      end
+    end
   end
 
   describe "#clear!" do
