@@ -175,4 +175,6 @@ module Qtrix
   def self.append_orchestrated_flag
     lambda {|queue_lists| queue_lists << :__orchestrated__}
   end
+
+  class ConfigurationError < StandardError; end
 end

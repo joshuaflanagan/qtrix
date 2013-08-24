@@ -138,48 +138,79 @@ describe Qtrix do
   end
 
   describe "#fetch_queues" do
-    before(:each) do
-      Qtrix.map_queue_weights \
-        A: 4,
-        B: 3,
-        C: 2,
-        D: 1
-    end
-
-    context "no overrides" do
-      it "should pick a queue list for a worker from the matrix" do
-        result = Qtrix.fetch_queues('host1', 1)
-        result.should == [[:A, :B, :C, :D, :__orchestrated__]]
-      end
-    end
-
-    context "with overrides" do
+    context "with queue weightings defined" do
       before(:each) do
-        Qtrix.add_override([:Z], 1)
+        Qtrix.map_queue_weights \
+          A: 4,
+          B: 3,
+          C: 2,
+          D: 1
       end
 
-      context "when requesting queus for fewer or equal workers as there are overrides" do
-        it "should pick a queue list from the overrides" do
-          Qtrix.fetch_queues('host1', 1).should == [[:Z]]
+      context "no overrides" do
+        it "should pick a queue list for a worker from the matrix" do
+          result = Qtrix.fetch_queues('host1', 1)
+          result.should == [[:A, :B, :C, :D, :__orchestrated__]]
         end
       end
 
-      context "when requeues queues for more workers than there are overrides" do
-        it "should choose queue lists from both overrides and the matrix" do
-          Qtrix.fetch_queues('host1', 2)
+      context "with overrides" do
+        before(:each) do
+          Qtrix.add_override([:Z], 1)
+        end
+
+        context "when requesting queues for fewer or equal workers as there are overrides" do
+          it "should pick a queue list from the overrides" do
+            Qtrix.fetch_queues('host1', 1).should == [[:Z]]
+          end
+        end
+
+        context "when requesting queues for more workers than there are overrides" do
+          it "should choose queue lists from both overrides and the matrix" do
+            Qtrix.fetch_queues('host1', 2)
             .should == [[:Z],[:A,:B,:C,:D,:__orchestrated__]]
+          end
+        end
+      end
+
+      context "across hosts" do
+        it "it should appropriately distribute the queues." do
+          first_expected = [[:A, :B, :C, :D, :__orchestrated__],
+                            [:B, :A, :C, :D, :__orchestrated__]]
+          Qtrix.fetch_queues('host1', 2).should == first_expected
+          second_expected = [[:C, :A, :B, :D, :__orchestrated__],
+                             [:D, :A, :B, :C, :__orchestrated__]]
+          Qtrix.fetch_queues('host2', 2).should == second_expected
         end
       end
     end
 
-    context "across hosts" do
-      it "it should appropriately distribute the queues." do
-        first_expected = [[:A, :B, :C, :D, :__orchestrated__],
-                          [:B, :A, :C, :D, :__orchestrated__]]
-        Qtrix.fetch_queues('host1', 2).should == first_expected
-        second_expected = [[:C, :A, :B, :D, :__orchestrated__],
-                           [:D, :A, :B, :C, :__orchestrated__]]
-        Qtrix.fetch_queues('host2', 2).should == second_expected
+    context "with no queue weightings defined" do
+      context "no overrides" do
+        it "should raise a configuration error" do
+          expect {
+            Qtrix.fetch_queues('host1', 1)
+          }.to raise_error Qtrix::ConfigurationError
+        end
+      end
+      context "with overrides" do
+        before(:each) do
+          Qtrix.add_override([:Z], 1)
+        end
+
+        context "when requesting queues for fewer or equal workers as there are overrides" do
+          it "should pick a queue list from the overrides" do
+            Qtrix.fetch_queues('host1', 1).should == [[:Z]]
+          end
+        end
+
+        context "when requesting queues for more workers than there are overrides" do
+          it "should raise a configuration error" do
+            expect {
+              Qtrix.fetch_queues('host1', 2)
+            }.to raise_error Qtrix::ConfigurationError
+          end
+        end
       end
     end
   end

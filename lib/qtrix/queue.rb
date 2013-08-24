@@ -18,11 +18,14 @@ module Qtrix
 
       def all_queues(namespace=:current)
         raw = redis(namespace).zrevrange(REDIS_KEY, 0, -1, withscores: true)
-        [].tap {|result|
-          raw.each_slice(2) do |tuple|
-            result << self.new(namespace, tuple[0], tuple[1].to_f)
-          end
-        }
+        result = []
+        raw.each_slice(2) do |tuple|
+          result << self.new(namespace, tuple[0], tuple[1].to_f)
+        end
+        if result.empty?
+          raise Qtrix::ConfigurationError, "No queue distribution defined"
+        end
+        result
       end
 
       def count(namespace=:current)

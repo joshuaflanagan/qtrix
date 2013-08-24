@@ -118,6 +118,14 @@ describe Qtrix::Queue do
     end
 
     describe "#all_queues" do
+      describe "with no distributions defined" do
+        it "should raise a configuration error" do
+          Qtrix::Queue.clear!
+          expect {
+            Qtrix::Queue.all_queues
+          }.to raise_error Qtrix::ConfigurationError
+        end
+      end
       describe "with no namepsace specified" do
         it "should contain all queues in the default ns sorted by weight desc" do
           Qtrix::Queue.all_queues.map(&:name).should == [:A, :B, :C]
