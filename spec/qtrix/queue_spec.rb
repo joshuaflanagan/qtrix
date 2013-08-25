@@ -110,7 +110,7 @@ describe Qtrix::Queue do
       end
 
       context "namespace specified" do
-        it "should affect targetted namespace" do
+        it "should affect specific namespace" do
           Qtrix::Queue.map_queue_weights :night, Z: 10, X: 1, Y: 5
           Qtrix::Queue.all_queues(:night).map(&:name).should == [:Z, :Y, :X]
         end
@@ -133,7 +133,7 @@ describe Qtrix::Queue do
       end
 
       describe "with namespace specified" do
-        it "should contain all queues in the default ns sorted by weight desc" do
+        it "should contain all queues in the given ns sorted by weight desc" do
           result = Qtrix::Queue.all_queues(:night)
           result.map(&:name).should == [:X, :Y, :Z]
         end

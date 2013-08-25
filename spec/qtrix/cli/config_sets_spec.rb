@@ -52,7 +52,7 @@ describe Qtrix::CLI::ConfigSets do
   end
 
   describe "activate configuration set" do
-    it "should allow activation of a configuration set" do
+    it "should change the current confguration set to the one specified" do
       Qtrix.create_configuration_set 'night'
       Qtrix.map_queue_weights 'night', A: 10
       config_sets.parse_options "-a night".split
@@ -68,7 +68,7 @@ describe Qtrix::CLI::ConfigSets do
       Qtrix.map_queue_weights :night, A: 10
     end
 
-    it "should allow removal of a configuration set" do
+    it "should delete all data for the given configuration set" do
       config_sets.parse_options "-d night".split
       config_sets.exec
       stdout.should match /success/

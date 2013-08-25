@@ -7,7 +7,7 @@ describe Qtrix::Matrix::Analyzer do
   let(:matrix) {Qtrix::Matrix.fetch_queues("host1", 4)}
 
   describe "#breakdown" do
-    it "results in hash of queue names to arrays of counts in each column in the matrix" do
+    it "returns a hash with queue name keys that reference counts by column" do
       result = Qtrix::Matrix::Analyzer.breakdown(matrix)
       result.should == {
         A: [1,3,0,0],
@@ -15,7 +15,6 @@ describe Qtrix::Matrix::Analyzer do
         C: [1,0,2,1],
         D: [1,0,0,3]
       }
-      result.dump
     end
   end
 
