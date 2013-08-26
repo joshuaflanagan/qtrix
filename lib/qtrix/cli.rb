@@ -54,6 +54,9 @@ Where available sub-commands are:
                 configuration set.
   overrides:    Perform operations on overrides within a
                 configuration set.
+  dump:         Dump all configuration from redis into
+                an executable file capable of recreating
+                the qtrix environment.
 
 For more information about the subcommands, try:
 
@@ -65,11 +68,13 @@ For more information about the subcommands, try:
     require 'qtrix/cli/config_sets'
     require 'qtrix/cli/queues'
     require 'qtrix/cli/overrides'
+    require 'qtrix/cli/dump'
 
     @commands = {
       config_sets:      ConfigSets,
       overrides:        Overrides,
       queues:           Queues,
+      dump:             Dump,
       :"config-sets" => ConfigSets,
     }
 
