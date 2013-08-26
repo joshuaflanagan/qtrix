@@ -25,6 +25,12 @@ module Qtrix
         }
       end
 
+      def to_map(namespace=:current)
+        all_queues(namespace).each_with_object({}) {|queue, map|
+          map[queue.name] = queue.weight
+        }
+      end
+
       def count(namespace=:current)
         redis(namespace).zcard(REDIS_KEY)
       end

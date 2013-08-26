@@ -63,7 +63,7 @@ module Qtrix
 
     def eql?(other)
       self.class.equal?(other.class) &&
-        @processes == other.processes &&
+        @host == other.host &&
         @queues == other.queues
     end
     alias == eql?

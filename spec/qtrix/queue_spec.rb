@@ -132,6 +132,14 @@ describe Qtrix::Queue do
       end
     end
 
+    describe "#to_map" do
+      it "should return a map containing all queue names mapped to their weights" do
+        map = {A: 10, B: 4}
+        Qtrix::Queue.map_queue_weights(map)
+        Qtrix::Queue.to_map.should == map
+      end
+    end
+
     describe "#count" do
       context "with no namespace specified" do
         it "should be the number of queues mapped in the current namespace" do

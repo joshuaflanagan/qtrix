@@ -34,6 +34,10 @@ Options include:
         long:        '--create CONFIG_SET_NAME',
         description: 'Create a new config set'
 
+      option :clone_configuration_set,
+        long:        '--clone SOURCE:DESTINATION',
+        description: 'Clone a config set'
+
       option :activate_configuration_set,
         short:       '-a CONFIG_SET_NAME',
         long:        '--activate CONFIG_SET_NAME',
@@ -80,6 +84,10 @@ Options include:
           config_set = config[:remove_configuration_set]
           Qtrix.remove_configuration_set!(config_set.to_sym)
           write("Configuration set removed successfully: #{config_set}")
+        elsif config[:clone_configuration_set]
+          source, dest = config[:clone_configuration_set].split(':')
+          Qtrix.clone_configuration_set(source, dest)
+          write("Successfully cloned #{source} into #{dest}")
         end
       end
     end
