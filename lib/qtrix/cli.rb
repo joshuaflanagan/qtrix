@@ -17,7 +17,7 @@ module Qtrix
         Qtrix.connection_config(config)
         unless exec_behavior
           msg = "no appropriate combination of options.\n\n"
-          msg += "Type 'bundle exec [command] --help' for usage"
+          msg += "Type 'qtrix [command] --help' for usage"
           error(msg)
         end
       rescue StandardError => e
@@ -45,7 +45,7 @@ module Qtrix
 
       banner <<-EOS
 
-Usage: bundle exec qtrix [sub-command] [options]
+Usage: qtrix [sub-command] [options]
 
 Where available sub-commands are:
 
@@ -57,7 +57,7 @@ Where available sub-commands are:
 
 For more information about the subcommands, try:
 
-  bundle exec qtrix [subcommand] --help
+  qtrix [subcommand] --help
 
       EOS
     end

@@ -5,7 +5,7 @@ module Qtrix
 
       banner <<-EOS
 
-Usage: bundle exec qtrix config_sets [options]
+Usage: qtrix config_sets [options]
 
 Allows interaction with the configuration sets in the qtrix system.
 With this, you can:
