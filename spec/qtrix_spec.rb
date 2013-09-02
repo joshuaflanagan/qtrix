@@ -152,6 +152,9 @@ describe Qtrix do
           result = Qtrix.fetch_queues('host1', 1)
           result.should == [[:A, :B, :C, :D, :__orchestrated__]]
         end
+
+        it "should not add any override claims" do
+        end
       end
 
       context "with overrides" do

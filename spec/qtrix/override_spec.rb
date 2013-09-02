@@ -8,6 +8,7 @@ describe Qtrix::Override do
   let(:matrix) {Qtrix::Matrix}
   let(:default_overrides) {raw_redis.llen("qtrix:default:overrides")}
   let(:night_overrides) {raw_redis.llen("qtrix:night:overrides")}
+  let(:override_claims_key) {Qtrix::Override::REDIS_CLAIMS_KEY}
 
   before do
     raw_redis.del "qtrix:default:overrides"
@@ -114,9 +115,20 @@ describe Qtrix::Override do
         Qtrix::Override.overrides_for("host1", 1).should == []
       end
 
+      it "should not generate override_claims as an artifact when no overrides are present" do
+        Qtrix::Override.overrides_for("host1", 1)
+        raw_redis.keys("*#{override_claims_key}").should be_empty
+      end
+
       it "should return a list of queues from an unclaimed override" do
-        Qtrix::Override.add(queues, 1)
+        Qtrix::Override.add(queues, 5)
         Qtrix::Override.overrides_for("host1", 1).should == [queues]
+      end
+
+      it "should only generate as many override claims as exist overrides" do
+        Qtrix::Override.add(queues, 1)
+        Qtrix::Override.overrides_for("host1", 5)
+        Qtrix::Override.redis.llen(override_claims_key).should == 1
       end
 
       it "should associate the host with the override" do
