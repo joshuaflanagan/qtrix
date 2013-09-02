@@ -36,13 +36,18 @@ module Qtrix
 
       def overrides_for(*args)
         namespace, hostname, workers = extract_args(2, *args)
-        workers.times {redis(namespace).rpush(REDIS_CLAIMS_KEY, hostname)}
+        needed = unclaimed(namespace)[0..workers-1].size
+        needed.times {redis(namespace).rpush(REDIS_CLAIMS_KEY, hostname)}
         claimed_by(namespace, hostname).map{|override| override.queues}
       end
 
       private
       def validate!(processes)
         raise "processes must be positive integer" unless processes > 0
+      end
+
+      def unclaimed(namespace)
+        all(namespace).select{|override| !override.host}
       end
 
       def claimed_by(*args)
