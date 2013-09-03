@@ -139,7 +139,7 @@ describe Qtrix do
 
   describe "#fetch_queues" do
     let(:override_claims_key) {Qtrix::Override::REDIS_CLAIMS_KEY}
-    context "with queue weightings defined" do
+    context "with queue weightings" do
       before(:each) do
         Qtrix.map_queue_weights \
           A: 4,
@@ -160,13 +160,13 @@ describe Qtrix do
         end
       end
 
-      context "with overrides" do
+      context "and overrides" do
         before(:each) do
           Qtrix.add_override([:Z], 1)
         end
 
         context "when requesting queues for fewer or equal workers as there are overrides" do
-          it "should pick a queue list from the overrides" do
+          it "should pick a queue list from the overrides only" do
             Qtrix.fetch_queues('host1', 1).should == [[:Z]]
           end
         end
@@ -178,17 +178,15 @@ describe Qtrix do
           end
         end
 
-        context "When multiple requests, greater than number of overrides, are made" do
-            it "should not add more claims than number of overrides when requests come from single host " do
-              (0..5).each {Qtrix.fetch_queues('host1', 2)}  
-              Qtrix::Override.redis.llen(override_claims_key).should == 1       
-            end
+        it "should not result in more override claims than configured overrides when requests come from single host " do
+          (0..5).each {Qtrix.fetch_queues('host1', 2)}
+          Qtrix::Override.redis.llen(override_claims_key).should == 1
+        end
 
-            it "should not add more claims than number of overrides when requests come from multiple hosts " do
-              Qtrix.fetch_queues('host1', 1)
-              (0..5).each { Qtrix.fetch_queues('host2', 2) }  
-              Qtrix::Override.redis.llen(override_claims_key).should == 1       
-            end
+        it "should not result in more override claims than configured overrides when requests come from mutliple hosts" do
+          Qtrix.fetch_queues('host1', 1)
+          (0..5).each { Qtrix.fetch_queues('host2', 2) }
+          Qtrix::Override.redis.llen(override_claims_key).should == 1
         end
       end
 
@@ -205,20 +203,20 @@ describe Qtrix do
     end
 
     context "with no queue weightings defined" do
-      context "no overrides" do
+      context "and no overrides" do
         it "should raise a configuration error" do
           expect {
             Qtrix.fetch_queues('host1', 1)
           }.to raise_error Qtrix::ConfigurationError
         end
       end
-      context "with overrides" do
+      context "and overrides added" do
         before(:each) do
           Qtrix.add_override([:Z], 1)
         end
 
         context "when requesting queues for fewer or equal workers as there are overrides" do
-          it "should pick a queue list from the overrides" do
+          it "should pick a queue list from the overrides only" do
             Qtrix.fetch_queues('host1', 1).should == [[:Z]]
           end
         end
