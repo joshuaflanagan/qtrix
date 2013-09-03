@@ -138,6 +138,7 @@ describe Qtrix do
   end
 
   describe "#fetch_queues" do
+    let(:override_claims_key) {Qtrix::Override::REDIS_CLAIMS_KEY}
     context "with queue weightings defined" do
       before(:each) do
         Qtrix.map_queue_weights \
@@ -154,6 +155,8 @@ describe Qtrix do
         end
 
         it "should not add any override claims" do
+          Qtrix.fetch_queues('host1', 2)
+          Qtrix::Override.redis.llen(override_claims_key).should == 0
         end
       end
 
@@ -173,6 +176,19 @@ describe Qtrix do
             Qtrix.fetch_queues('host1', 2)
             .should == [[:Z],[:A,:B,:C,:D,:__orchestrated__]]
           end
+        end
+
+        context "When multiple requests, greater than number of overrides, are made" do
+            it "should not add more claims than number of overrides when requests come from single host " do
+              (0..5).each {Qtrix.fetch_queues('host1', 2)}  
+              Qtrix::Override.redis.llen(override_claims_key).should == 1       
+            end
+
+            it "should not add more claims than number of overrides when requests come from multiple hosts " do
+              Qtrix.fetch_queues('host1', 1)
+              (0..5).each { Qtrix.fetch_queues('host2', 2) }  
+              Qtrix::Override.redis.llen(override_claims_key).should == 1       
+            end
         end
       end
 
