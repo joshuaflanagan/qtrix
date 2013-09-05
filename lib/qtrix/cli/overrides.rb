@@ -3,7 +3,7 @@ module Qtrix
     class Overrides < Base
       banner <<-EOS
 
-Usage: bundle exec qtrix overrides [options]
+Usage: qtrix overrides [options]
 
 Allows interaction with the overrides in a configuration set.  With this
 you can:
