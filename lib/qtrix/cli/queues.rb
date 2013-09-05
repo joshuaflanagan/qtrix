@@ -3,7 +3,7 @@ module Qtrix
     class Queues < Base
       banner <<-EOS
 
-Usage: bundle exec qtrix queues [options]
+Usage: qtrix queues [options]
 
 Allows observance and manipulation of queue priority within a
 configuration set.  With this you can:

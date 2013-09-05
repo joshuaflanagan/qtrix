@@ -37,72 +37,72 @@ The following options are common to all/most commands:
 To see all configuration sets:
 
 ```bash
-bundle exec qtrix config_sets -l
+qtrix config_sets -l
 ```
 
 To see the current configuration set:
 ```bash
-bundle exec qtrix config_sets -c
+qtrix config_sets -c
 ```
 
 To add a configuration set:
 ```bash
-bundle exec qtrix config_sets --create night
+qtrix config_sets --create night
 ```
 
 To remove a configuration set:
 ```bash
-bundle exec qtrix config_sets -d night
+qtrix config_sets -d night
 ```
 
 ### Viewing or Specifying Queue Priority
 To view the current queue priority:
 
 ```bash
-bundle exec qtrix queues -l
+qtrix queues -l
 ```
 
 To specify the current queue weightings by inline string:
 
 ```bash
-bundle exec qtrix queues -w A:40,B:30,C:20,D:10
+qtrix queues -w A:40,B:30,C:20,D:10
 ```
 
 To specify the current queue weightings by an evaluated yaml file:
 
 ```bash
-bundle exec qtrix queues -y ~/my_really_cool.yml
+qtrix queues -y ~/my_really_cool.yml
 ```
 
 ### Viewing or Modifying Overrides
 To view all current queue list overrides and what host has claimed them:
 
 ```bash
-bundle exec qtrix overrides -l
+qtrix overrides -l
 ```
 
 To add a single queue list override:
 
 ```bash
-bundle exec qtrix overrides -a -q A,B,C
+qtrix overrides -a -q A,B,C
 ```
 
 To add 10 overrides for the same queue list:
 
 ```bash
-bundle exec qtrix overrides -a -q X,Y,Z -w 10
+qtrix overrides -a -q X,Y,Z -w 10
 ```
 
 To remove a single queue list override:
 
 ```bash
-bundle exec qtrix overrides -d -q A,B,C
+qtrix overrides -d -q A,B,C
 ```
 
 To remove 10 overrides for the same queue list:
 
 ```bash
-bundle exec qtrix overrides -d -q X,Y,Z -w 10
+qtrix overrides -d -q X,Y,Z -w 10
 ```
 
 ## API
