@@ -16,7 +16,7 @@ Gem::Specification.new do |gem|
   gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
   gem.test_files    = gem.files.grep(%r{^(test|spec|features)/})
   gem.require_paths = ["lib"]
-  gem.add_dependency "redis-namespace", "~> 1.0.2"
+  gem.add_dependency "redis-namespace", "~> 1.2"
   gem.add_dependency "mixlib-cli", "1.3.0"
   gem.add_development_dependency 'rake', '~> 0.9'
   gem.add_development_dependency "rspec-core", "2.11.0"
