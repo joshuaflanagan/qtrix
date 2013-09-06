@@ -18,8 +18,7 @@ module Qtrix
 
       def all_queues(namespace=:current)
         raw = redis(namespace).zrevrange(REDIS_KEY, 0, -1, withscores: true)
-        result = []
-        raw.each_slice(2) do |tuple|
+        result = raw.each_with_object([]) do |tuple, result|
           result << self.new(namespace, tuple[0], tuple[1].to_f)
         end
         if result.empty?
