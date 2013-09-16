@@ -1,3 +1,5 @@
+### Note: We are currently stabilizing this library and is not recommended for production use yet.
+
 # Qtrix
 
 Qtrix is a means by which to intelligently pick prioritized queues for background workers.  It supports the following:
