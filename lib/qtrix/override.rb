@@ -30,8 +30,13 @@ module Qtrix
       end
 
       def clear!(namespace=:current)
+        clear_claims!(namespace)
         redis(namespace).del REDIS_KEY
+      end
+
+      def clear_claims!(namespace=:current)
         Qtrix::Matrix.clear!(namespace)
+        redis(namespace).del(REDIS_CLAIMS_KEY)
       end
 
       def overrides_for(*args)
