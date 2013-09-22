@@ -148,6 +148,12 @@ describe Qtrix do
           D: 1
       end
 
+      it "should treat the request as a ping from the host" do
+        Qtrix.fetch_queues('host1', 1)
+        Qtrix::HostManager.all.should == ['host1']
+      end
+
+
       context "no overrides" do
         it "should pick a queue list for a worker from the matrix" do
           result = Qtrix.fetch_queues('host1', 1)
@@ -187,6 +193,19 @@ describe Qtrix do
           Qtrix.fetch_queues('host1', 1)
           (0..5).each { Qtrix.fetch_queues('host2', 2) }
           Qtrix::Override.redis.llen(override_claims_key).should == 1
+        end
+
+        it "should rebalance the matrix when hosts have been detected to be offline" do
+          start_time = Qtrix::HostManager.server_time
+          Qtrix.fetch_queues('host1', 2).first.should == [:Z]
+          Qtrix.fetch_queues('host2', 2).first.should_not == [:Z]
+
+          Qtrix::HostManager.stub(:server_time) {start_time + 5}
+          Qtrix.fetch_queues('host2', 2)
+          Qtrix::HostManager.stub(:server_time) {start_time + 10}
+          Qtrix.fetch_queues('host2', 2)
+          Qtrix::HostManager.stub(:server_time) {start_time + 15}
+          Qtrix.fetch_queues('host2', 2).first.should == [:Z]
         end
       end
 
@@ -235,18 +254,26 @@ describe Qtrix do
   describe "#clear!" do
     let(:queue_key) {Qtrix::Queue::REDIS_KEY}
     let(:override_key) {Qtrix::Override::REDIS_KEY}
+    let(:override_claims_key) {Qtrix::Override::REDIS_CLAIMS_KEY}
     let(:matrix_key) {Qtrix::Matrix::REDIS_KEY}
+    let(:known_hosts_key) {Qtrix::HostManager::REDIS_KEY}
+
     before do
       Qtrix.map_queue_weights A: 0.4
-      Qtrix::Matrix.fetch_queues("localhost", 2)
       Qtrix.add_override([:D, :A, :B, :C], 1)
+      Qtrix.fetch_queues("localhost", 2)
+      Qtrix.redis.keys(matrix_key).should_not be_empty
+      Qtrix.redis.keys(override_claims_key).should_not be_empty
+      Qtrix.redis.keys(known_hosts_key).should_not be_empty
     end
 
     it "should clear redis of all keys related to qtrix" do
       Qtrix.clear!
-      Qtrix.redis.keys("#{matrix_key}*").should be_empty
-      Qtrix.redis.keys("#{queue_key}*").should_not be_empty
-      Qtrix.redis.keys("#{override_key}*").should_not be_empty
+      Qtrix.redis.keys(matrix_key).should be_empty
+      Qtrix.redis.keys(override_claims_key).should be_empty
+      Qtrix.redis.keys(known_hosts_key).should be_empty
+      Qtrix.redis.keys(queue_key).should_not be_empty
+      Qtrix.redis.keys(override_key).should_not be_empty
     end
   end
 end
