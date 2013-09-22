@@ -159,6 +159,8 @@ module Qtrix
   # for the number of workers specified for the given +hostname+.
 
   def self.fetch_queues(hostname, workers)
+    HostManager.ping(hostname)
+    clear_matrix_if_any_hosts_offline
     overrides_queues = Qtrix::Override.overrides_for(hostname, workers)
     delta = workers - overrides_queues.size
     matrix_queues = delta > 0 ? Matrix.fetch_queues(hostname, delta) : []
@@ -169,10 +171,18 @@ module Qtrix
   # Clears redis of all information related to the orchestration system
 
   def self.clear!
+    Override.clear_claims!
+    HostManager.clear!
     Matrix.clear!
   end
 
   private
+  def self.clear_matrix_if_any_hosts_offline
+    if HostManager.any_offline?
+      clear!
+    end
+  end
+
   def self.append_orchestrated_flag
     lambda {|queue_lists| queue_lists << :__orchestrated__}
   end
