@@ -310,6 +310,16 @@ pry(main)> Qtrix.fetch_queues("host2", 2)
 
 This operation is currently not targettable to a configuration set.  It always operates on the current configuration set.
 
+## Locking & Synchronization
+Qtrix uses a locking mechanism to protect certain operations that should be atomic.  These are all at the Qtrix facade level, no operations of classes beneath the facade are protected.  If a lock cannot be acquired within a reasonable amount of time, a ```Qtrix::Locking::LockNotAcquired``` exception will be raised.  The following operations are protected by locking:
+
+```Qtrix#activate_configuration_set!```
+```Qtrix#map_queue_weights```
+```Qtrix#add_override```
+```Qtrix#remove_override```
+```Qtrix#fetch_queues```
+```Qtrix#clear!```
+
 ## Contributing
 
 1. Fork it

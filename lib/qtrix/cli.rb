@@ -20,6 +20,8 @@ module Qtrix
           msg += "Type 'qtrix [command] --help' for usage"
           error(msg)
         end
+      rescue Qtrix::Locking::LockNotAcquired => e
+        error("Failed to obtain Qtrix lock within reasonable time (redis key #{e})")
       rescue StandardError => e
         error("Failure: #{e}")
       end
