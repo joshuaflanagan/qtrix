@@ -3,6 +3,7 @@ require 'qtrix/namespacing'
 require 'qtrix/queue'
 require 'qtrix/override'
 require 'qtrix/matrix'
+require 'qtrix/locking'
 
 ##
 # Facade into a dynamically adjusting global worker pool that auto
