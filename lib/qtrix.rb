@@ -31,6 +31,7 @@ require 'qtrix/locking'
 
 module Qtrix
   include Namespacing
+  extend Locking
   ##
   # Specifies the redis connection configuration options as per the
   # redis gem.
@@ -81,9 +82,15 @@ module Qtrix
   ##
   # Specifies the current configuration set.  The namespace must identify
   # a configuration set created with create_configuration_set.
+  #
+  # This method is protected by a distributed lock and may raise a
+  # Qtrix::Locking::LockNotAquired exception if it is unable to obtain
+  # a lock within a reasonable time.
 
   def self.activate_configuration_set!(namespace)
-    Namespacing::Manager.instance.change_current_namespace(namespace)
+    with_lock do
+      Namespacing::Manager.instance.change_current_namespace(namespace)
+    end
   end
 
   ##
@@ -106,10 +113,16 @@ module Qtrix
   # config_set: optional, defaults to current.
   # map: the queue-to-weight mappings as a hash of queue names to
   #      float values.
+  #
+  # This method is protected by a distributed lock and may raise a
+  # Qtrix::Locking::LockNotAquired exception if it is unable to obtain
+  # a lock within a reasonable time.
 
   def self.map_queue_weights(*args)
-    config_set, map = extract_args(1, *args)
-    Qtrix::Queue.map_queue_weights(config_set, map)
+    with_lock do
+      config_set, map = extract_args(1, *args)
+      Qtrix::Queue.map_queue_weights(config_set, map)
+    end
   end
 
   ##
@@ -123,11 +136,17 @@ module Qtrix
   # queues:  Array of queue names.
   # processes:  Integer specifying the number of workers
   # to override queues for.
+  #
+  # This method is protected by a distributed lock and may raise a
+  # Qtrix::Locking::LockNotAquired exception if it is unable to obtain
+  # a lock within a reasonable time.
 
   def self.add_override(*args)
-    config_set, queues, processes = extract_args(2, *args)
-    Qtrix::Override.add(config_set, queues, processes)
-    true
+    with_lock do
+      config_set, queues, processes = extract_args(2, *args)
+      Qtrix::Override.add(config_set, queues, processes)
+      true
+    end
   end
 
   ##
@@ -139,11 +158,17 @@ module Qtrix
   # configuration_set: optional, defaults to :current.
   # queues:  Array of queues in the override.
   # processes:  Number of processes to remove from overriding.
+  #
+  # This method is protected by a distributed lock and may raise a
+  # Qtrix::Locking::LockNotAquired exception if it is unable to obtain
+  # a lock within a reasonable time.
 
   def self.remove_override(*args)
-    config_set, queues, processes = extract_args(2, *args)
-    Qtrix::Override.remove(config_set, queues, processes)
-    true
+    with_lock do
+      config_set, queues, processes = extract_args(2, *args)
+      Qtrix::Override.remove(config_set, queues, processes)
+      true
+    end
   end
 
   ##
@@ -157,22 +182,40 @@ module Qtrix
   ##
   # Retrieves lists of queues as appropriate to the overall system balance
   # for the number of workers specified for the given +hostname+.
+  #
+  # This method is protected by a distributed lock and may raise a
+  # Qtrix::Locking::LockNotAquired exception if it is unable to obtain
+  # a lock within a reasonable time.
 
   def self.fetch_queues(hostname, workers)
-    overrides_queues = Qtrix::Override.overrides_for(hostname, workers)
-    delta = workers - overrides_queues.size
-    matrix_queues = delta > 0 ? Matrix.fetch_queues(hostname, delta) : []
-    overrides_queues + matrix_queues.map(&append_orchestrated_flag)
+    with_lock(last_fetch_queues) do
+      overrides_queues = Qtrix::Override.overrides_for(hostname, workers)
+      delta = workers - overrides_queues.size
+      matrix_queues = delta > 0 ? Matrix.fetch_queues(hostname, delta) : []
+      last_fetch_queues = overrides_queues + matrix_queues.map(&append_orchestrated_flag)
+    end
   end
 
   ##
   # Clears redis of all information related to the orchestration system
+  #
+  # This method is protected by a distributed lock and may raise a
+  # Qtrix::Locking::LockNotAquired exception if it is unable to obtain
+  # a lock within a reasonable time.
 
   def self.clear!
-    Matrix.clear!
+    with_lock do
+      Matrix.clear!
+    end
   end
 
   private
+  attr_writer :last_fetch_queues
+
+  def self.last_fetch_queues
+    @last_fetch_queues ||= []
+  end
+
   def self.append_orchestrated_flag
     lambda {|queue_lists| queue_lists << :__orchestrated__}
   end
