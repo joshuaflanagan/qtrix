@@ -12,6 +12,15 @@ describe Qtrix do
       end
     end
 
+    describe "#has_configuration_set?" do
+      it "should return true if the passed config set exists" do
+        Qtrix.has_configuration_set?(:default).should == true
+      end
+
+      it "should return false if the passed config set does not exist" do
+        Qtrix.has_configuration_set?(:foo).should == false end
+    end
+
     describe "#create_configuration_set" do
       it "should create a namespace" do
         Qtrix.create_configuration_set :weekend
@@ -39,6 +48,46 @@ describe Qtrix do
         Qtrix.map_queue_weights :weekend, A: 10
         Qtrix.activate_configuration_set! :weekend
         namespace_manager.current_namespace.should == :weekend
+      end
+    end
+
+    describe "#clone_configuration_set" do
+      before(:each) do
+        Qtrix.map_queue_weights A: 10
+        Qtrix.add_override [:Z], 1
+      end
+
+      it "should fail if source is not specified" do
+        expect{Qtrix.clone_configuration_set nil, :bar}.to raise_error
+      end
+
+      it "should fail if dest is not specified" do
+        expect{Qtrix.clone_configuration_set :default, nil}.to raise_error
+      end
+
+      it "should fail if source does not exist" do
+        expect{Qtrix.clone_configuration_set :foo, :bar}.to raise_error
+      end
+
+      it "should fail if dest already exists" do
+        expect{Qtrix.clone_configuration_set :default, :default}.to raise_error
+      end
+
+      it "should create the destination config set" do
+        Qtrix.clone_configuration_set :default, :foo
+        Qtrix.has_configuration_set?(:foo).should == true
+      end
+
+      it "should copy queue weights to the clone" do
+        Qtrix.clone_configuration_set :default, :foo
+        Qtrix.desired_distribution(:foo).should ==
+          Qtrix.desired_distribution(:default)
+      end
+
+      it "should copy overrides to the clone" do
+        Qtrix.clone_configuration_set :default, :foo
+        Qtrix.overrides(:foo).should ==
+          Qtrix.overrides(:default)
       end
     end
   end

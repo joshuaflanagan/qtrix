@@ -55,11 +55,34 @@ module Qtrix
   end
 
   ##
+  # Returns true if a config set with the specified name exists,
+  # or false otherwise.
+  def self.has_configuration_set?(named)
+    self.configuration_sets.include?(named.to_sym)
+  end
+
+  ##
   # Creates a configuration set for use in the system, which
   # can have its own desired distribution and overrides.
 
   def self.create_configuration_set(namespace)
     Namespacing::Manager.instance.add_namespace(namespace)
+  end
+
+  ##
+  # Duplicates the specified source configuration set with the
+  # specified dest name.
+  def self.clone_configuration_set(source, dest)
+    raise "source not specified" unless source
+    raise "dest not specified" unless dest
+    raise "#{source} does not exist" unless
+      self.has_configuration_set?(source)
+    raise "#{dest} already exists" if
+      self.has_configuration_set?(dest)
+
+    self.create_configuration_set(dest)
+    self.map_queue_weights(dest, Qtrix::Queue.to_map(source))
+    self.overrides.each{|o| self.add_override(dest, o.queues, 1)}
   end
 
   ##
