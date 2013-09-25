@@ -30,6 +30,7 @@ module Qtrix
           map[queue.name] = queue.weight
         }
       end
+      alias_method :to_h, :to_map
 
       def count(namespace=:current)
         redis(namespace).zcard(REDIS_KEY)
