@@ -91,4 +91,49 @@ describe Qtrix::CLI::ConfigSets do
       Qtrix.configuration_sets.select{|cs| cs == :default}.size.should == 1
     end
   end
+
+  describe "clone config set" do
+    before(:each) do
+      Qtrix.map_queue_weights A: 10
+      Qtrix.add_override [:B], 1
+    end
+
+    it "should error if it cannot parse the parameter" do
+      config_sets.parse_options "--clone blah".split
+      config_sets.exec
+      stderr.should match /not specified/i
+    end
+
+    it "should error if the source config set does not exist" do
+      config_sets.parse_options "--clone foo:bar".split
+      config_sets.exec
+      stderr.should match /does not exist/i
+    end
+
+    it "should error if the dest config set does exist" do
+      config_sets.parse_options "--clone default:default".split
+      config_sets.exec
+      stderr.should match /already exists/i
+    end
+
+    it "should create the dest config set" do
+      config_sets.parse_options "--clone default:night".split
+      config_sets.exec
+      stdout.should match /successfully cloned default into night/i
+      Qtrix.has_configuration_set?(:night).should == true
+    end
+
+    it "should copy queue weights into the clone" do
+      config_sets.parse_options "--clone default:night".split
+      config_sets.exec
+      Qtrix.desired_distribution(:night).should ==
+        Qtrix.desired_distribution(:default)
+    end
+
+    it "should copy overrides into the clone" do
+      config_sets.parse_options "--clone default:night".split
+      config_sets.exec
+      Qtrix.overrides(:night).should == Qtrix.overrides(:default)
+    end
+  end
 end
