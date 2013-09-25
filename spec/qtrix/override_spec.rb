@@ -81,12 +81,67 @@ describe Qtrix::Override do
     end
   end
 
+  describe "#clear_claims!" do
+    describe "with no namespace passed" do
+      before do
+        Qtrix::Override.add(queues, 1)
+        Qtrix::Override.overrides_for('localhost', 1)
+      end
+
+      it "should drop override claims from redis" do
+        Qtrix::Override.clear_claims! 
+        redis.exists(Qtrix::Override::REDIS_CLAIMS_KEY).should_not == true
+      end
+
+      it "should not drop the overrides from redis" do
+        Qtrix::Override.clear_claims! 
+        redis.exists(Qtrix::Override::REDIS_KEY).should == true
+      end
+
+      it "should blow away the matrix" do
+        Qtrix::Override.clear_claims!
+        matrix.to_table.should be_empty
+      end
+    end
+
+    describe "with namespace passed" do
+      before do
+        Qtrix::Override.add(:night, queues, 1)
+        Qtrix::Override.overrides_for(:night, 'localhost', 1)
+      end
+
+      it "should drop override claims from redis" do
+        Qtrix::Override.clear_claims!(:night)
+        redis(:night).exists(Qtrix::Override::REDIS_CLAIMS_KEY).should_not == true
+      end
+
+      it "should not drop the overrides from redis" do
+        Qtrix::Override.clear_claims!(:night)
+        redis(:night).exists(Qtrix::Override::REDIS_KEY).should == true
+      end
+
+      it "should blow away the matrix" do
+        Qtrix::Override.clear_claims!(:night)
+        matrix.to_table(:night).should be_empty
+      end
+    end
+  end
+
   describe "#clear!" do
     describe "with no namespace passed" do
-      it "should drop all override data from redis" do
+      before do
         Qtrix::Override.add(queues, 1)
+        Qtrix::Override.overrides_for('localhost', 1)
+      end
+
+      it "should drop override data from redis" do
         Qtrix::Override.clear!
         redis.exists(Qtrix::Override::REDIS_KEY).should_not == true
+      end
+
+      it "should drop override claim data from redis" do
+        Qtrix::Override.clear!
+        redis.exists(Qtrix::Override::REDIS_CLAIMS_KEY).should_not == true
       end
 
       it "should blow away the matrix" do
@@ -96,10 +151,19 @@ describe Qtrix::Override do
     end
 
     describe "with namespace passed" do
-      it "should drop override data from the target namespace" do
+      before do
         Qtrix::Override.add(:night, queues, 1)
-        Qtrix::Override.clear! :night
+        Qtrix::Override.overrides_for(:night, 'localhost', 1)
+      end
+
+      it "should drop override data from the target namespace" do
+        Qtrix::Override.clear!(:night)
         raw_redis.llen("qtrix:night:overrides").should == 0
+      end
+
+      it "should drop override claim data from target namespace" do
+        Qtrix::Override.clear!(:night)
+        raw_redis.llen("qtrix:night:override_claims").should == 0
       end
 
       it "should blow away the matrix in target namespace" do
