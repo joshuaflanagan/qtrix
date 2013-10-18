@@ -75,7 +75,7 @@ describe Qtrix::HostManager do
     before do
       Qtrix::HostManager.ping("localhost")
       server_time = Qtrix::HostManager.server_time
-      Qtrix::HostManager.stub(:server_time) {server_time + 16}
+      Qtrix::HostManager.stub(:server_time) {server_time + 121}
     end
 
     describe "#all" do

@@ -52,7 +52,7 @@ module Qtrix
       end
 
       def mia_time
-        @mia_time ||= ENV.fetch('MIA_TIME', 15).to_i
+        @mia_time ||= ENV.fetch('MIA_TIME', 120).to_i
       end
     end
   end

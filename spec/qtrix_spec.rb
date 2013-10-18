@@ -249,11 +249,9 @@ describe Qtrix do
           Qtrix.fetch_queues('host1', 2).first.should == [:Z]
           Qtrix.fetch_queues('host2', 2).first.should_not == [:Z]
 
-          Qtrix::HostManager.stub(:server_time) {start_time + 5}
+          Qtrix::HostManager.stub(:server_time) {start_time + 60}
           Qtrix.fetch_queues('host2', 2)
-          Qtrix::HostManager.stub(:server_time) {start_time + 10}
-          Qtrix.fetch_queues('host2', 2)
-          Qtrix::HostManager.stub(:server_time) {start_time + 15}
+          Qtrix::HostManager.stub(:server_time) {start_time + 120}
           Qtrix.fetch_queues('host2', 2).first.should == [:Z]
         end
       end
