@@ -66,6 +66,13 @@ module Qtrix
     end
 
     ##
+    # Returns the time on the redis server.
+    def redis_time
+      # Could use redis time command, but > 2.6 only.
+      redis.info.fetch("uptime_in_seconds").to_i
+    end
+
+    ##
     # Manages namespaces.  Uses Redis::Namespace to impose the namespacing
     # on calls to redis, and maintains the known config namespaces within
     # redis.  Should not be working directly with this too much, it should

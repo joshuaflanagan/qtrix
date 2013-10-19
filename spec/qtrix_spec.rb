@@ -245,13 +245,13 @@ describe Qtrix do
         end
 
         it "should rebalance the matrix when hosts have been detected to be offline" do
-          start_time = Qtrix::HostManager.server_time
+          start_time = Qtrix::HostManager.redis_time
           Qtrix.fetch_queues('host1', 2).first.should == [:Z]
           Qtrix.fetch_queues('host2', 2).first.should_not == [:Z]
 
-          Qtrix::HostManager.stub(:server_time) {start_time + 60}
+          Qtrix::HostManager.stub(:redis_time) {start_time + 60}
           Qtrix.fetch_queues('host2', 2)
-          Qtrix::HostManager.stub(:server_time) {start_time + 120}
+          Qtrix::HostManager.stub(:redis_time) {start_time + 121}
           Qtrix.fetch_queues('host2', 2).first.should == [:Z]
         end
       end
