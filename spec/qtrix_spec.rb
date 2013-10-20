@@ -202,6 +202,16 @@ describe Qtrix do
         Qtrix::HostManager.all.should == ['host1']
       end
 
+      it "should return previous results if it cannot obtain a lock" do
+        result = Qtrix.fetch_queues('host1', 1)
+        result.should == [[:A, :B, :C, :D, :__orchestrated__]]
+
+        Qtrix.map_queue_weights Z: 1
+        Qtrix.redis.set :lock, Qtrix.redis_time + 15
+
+        result = Qtrix.fetch_queues('host1', 1)
+        result.should == [[:A, :B, :C, :D, :__orchestrated__]]
+      end
 
       context "no overrides" do
         it "should pick a queue list for a worker from the matrix" do

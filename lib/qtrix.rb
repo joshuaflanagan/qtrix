@@ -34,6 +34,7 @@ require 'qtrix/locking'
 module Qtrix
   include Namespacing
   extend Logging
+  extend Locking
   ##
   # Specifies the redis connection configuration options as per the
   # redis gem.
@@ -102,7 +103,9 @@ module Qtrix
   # of the system as a whole.
 
   def self.remove_configuration_set!(namespace)
-    Namespacing::Manager.instance.remove_namespace!(namespace)
+    with_lock timeout: 10 do
+      Namespacing::Manager.instance.remove_namespace!(namespace)
+    end
   rescue Exception => e
     error(e)
     raise
@@ -120,7 +123,9 @@ module Qtrix
   # a configuration set created with create_configuration_set.
 
   def self.activate_configuration_set!(namespace)
-    Namespacing::Manager.instance.change_current_namespace(namespace)
+    with_lock timeout: 10 do
+      Namespacing::Manager.instance.change_current_namespace(namespace)
+    end
   rescue Exception => e
     error(e)
     raise
@@ -148,8 +153,10 @@ module Qtrix
   #      float values.
 
   def self.map_queue_weights(*args)
-    config_set, map = extract_args(1, *args)
-    Qtrix::Queue.map_queue_weights(config_set, map)
+    with_lock timeout: 10 do
+      config_set, map = extract_args(1, *args)
+      Qtrix::Queue.map_queue_weights(config_set, map)
+    end
   rescue Exception => e
     error(e)
     raise
@@ -168,9 +175,11 @@ module Qtrix
   # to override queues for.
 
   def self.add_override(*args)
-    config_set, queues, processes = extract_args(2, *args)
-    Qtrix::Override.add(config_set, queues, processes)
-    true
+    with_lock timeout: 10 do
+      config_set, queues, processes = extract_args(2, *args)
+      Qtrix::Override.add(config_set, queues, processes)
+      true
+    end
   rescue Exception => e
     error(e)
     raise
@@ -187,9 +196,11 @@ module Qtrix
   # processes:  Number of processes to remove from overriding.
 
   def self.remove_override(*args)
-    config_set, queues, processes = extract_args(2, *args)
-    Qtrix::Override.remove(config_set, queues, processes)
-    true
+    with_lock timeout: 10 do
+      config_set, queues, processes = extract_args(2, *args)
+      Qtrix::Override.remove(config_set, queues, processes)
+      true
+    end
   rescue Exception => e
     error(e)
     raise
@@ -210,15 +221,17 @@ module Qtrix
   def self.fetch_queues(hostname, workers)
     HostManager.ping(hostname)
     clear_matrix_if_any_hosts_offline
-    debug("fetching #{workers} queue lists for #{hostname}")
-    overrides_queues = Qtrix::Override.overrides_for(hostname, workers)
-    debug("overrides for #{hostname}: #{overrides_queues}")
-    delta = workers - overrides_queues.size
-    matrix_queues = delta > 0 ? Matrix.fetch_queues(hostname, delta) : []
-    debug("matrix queue lists: #{matrix_queues}")
-    decorated_queues = matrix_queues.map(&append_orchestrated_flag)
-    (overrides_queues + decorated_queues).tap do |queue_lists|
-      debug("all queue lists: #{queue_lists}")
+    with_lock timeout: 5, on_timeout: last_result do
+      debug("fetching #{workers} queue lists for #{hostname}")
+      overrides_queues = Qtrix::Override.overrides_for(hostname, workers)
+      debug("overrides for #{hostname}: #{overrides_queues}")
+      delta = workers - overrides_queues.size
+      matrix_queues = delta > 0 ? Matrix.fetch_queues(hostname, delta) : []
+      debug("matrix queue lists: #{matrix_queues}")
+      decorated_queues = matrix_queues.map(&append_orchestrated_flag)
+      @last_result = (overrides_queues + decorated_queues).tap do |queue_lists|
+        debug("all queue lists: #{queue_lists}")
+      end
     end
   rescue Exception => e
     error(e)
@@ -229,13 +242,25 @@ module Qtrix
   # Clears redis of all information related to the orchestration system
 
   def self.clear!
-    info "clearing data"
-    Override.clear_claims!
-    HostManager.clear!
-    Matrix.clear!
+    with_lock timeout: 10 do
+      info "clearing data"
+      Override.clear_claims!
+      HostManager.clear!
+      Matrix.clear!
+    end
   end
 
   private
+  def self.last_result
+    lambda do
+      if @last_result
+        @last_result
+      else
+        raise "no previous result (unable to obtain lock on first attempt)"
+      end
+    end
+  end
+
   def self.clear_matrix_if_any_hosts_offline
     if HostManager.any_offline?
       info "hosts detected offline: #{HostManager.offline.join(', ')}"
