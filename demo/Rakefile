@@ -1,0 +1,21 @@
+require 'resque'
+require 'resque/tasks'
+require_relative 'jobs'
+
+task "resque:setup" do
+  ENV['QUEUE'] = '*'
+  Resque.logger.level = 1
+end
+
+task default: "resque:work"
+
+# Resque-pool configuration/wiring occurs here.
+task 'resque:pool:setup' do
+  require_relative 'qtrix_config_loader'
+end
+
+task :console do
+  require 'irb'
+  ARGV.clear
+  IRB.start
+end
