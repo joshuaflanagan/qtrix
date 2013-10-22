@@ -1,12 +1,14 @@
 module Qtrix
   class HostManager
     extend Qtrix::Namespacing
+    extend Qtrix::Logging
     REDIS_KEY = :known_hosts
 
     class << self
       ##
       # Notifies that a host has checked in recently.
       def ping(host)
+        debug("Pinging from #{host}")
         redis.zadd(REDIS_KEY, server_time, host)
       end
 
@@ -36,6 +38,7 @@ module Qtrix
       ##
       # Clears the host map.
       def clear!
+        debug("Clearing known hosts")
         redis.del(REDIS_KEY)
       end
 

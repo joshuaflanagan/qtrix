@@ -11,6 +11,7 @@ module Qtrix
     class QueuePicker
       include Namespacing
       include Common
+      include Logging
       attr_reader :namespace, :reader, :hostname, :workers
 
       def initialize(*args)
@@ -25,7 +26,9 @@ module Qtrix
         elsif delta < 0
           prune(delta)
         end
-        rows_for_host.map(&to_queues)
+        rows_for_host.map(&to_queues).tap do |rows|
+          debug("matrix rows for #{hostname}: #{rows}")
+        end
       end
 
       private
@@ -34,7 +37,6 @@ module Qtrix
       end
 
       def rows_for_host
-        # TODO fix me.
         reader.rows_for_host(hostname, namespace)
       end
 
@@ -44,7 +46,9 @@ module Qtrix
 
       def prune(count)
         count.abs.times.each do
-          redis(namespace).lrem(REDIS_KEY, -2, pack(rows_for_host.pop))
+          row = rows_for_host.pop
+          debug("pruning from matrix: #{row}")
+          redis(namespace).lrem(REDIS_KEY, -2, pack(row))
         end
       end
     end

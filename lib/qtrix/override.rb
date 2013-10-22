@@ -1,12 +1,14 @@
 module Qtrix
   class Override
     extend Qtrix::Namespacing
+    extend Qtrix::Logging
     REDIS_KEY = :overrides
     REDIS_CLAIMS_KEY = :override_claims
 
     class << self
       def add(*args)
         namespace, queues, processes = extract_args(2, *args)
+        info("adding #{processes} overrides for #{queues.join(', ')} to #{namespace}")
         validate!(processes)
         processes.times do
           redis(namespace).rpush(REDIS_KEY, queues.join(","))
@@ -25,17 +27,20 @@ module Qtrix
 
       def remove(*args)
         namespace, queues, processes = extract_args(2, *args)
+        info("removing #{processes} overrides for #{queues.join(', ')} to #{namespace}")
         redis(namespace).lrem(REDIS_KEY, processes, queues.join(","))
         Qtrix::Matrix.clear!(namespace)
       end
 
       def clear!(namespace=:current)
         clear_claims!(namespace)
+        info("clearing overrides for #{namespace}")
         redis(namespace).del REDIS_KEY
       end
 
       def clear_claims!(namespace=:current)
         Qtrix::Matrix.clear!(namespace)
+        debug("clearing overrides claimed for #{namespace}")
         redis(namespace).del(REDIS_CLAIMS_KEY)
       end
 

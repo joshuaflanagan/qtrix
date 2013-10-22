@@ -49,6 +49,7 @@ module Qtrix
   module Matrix
     include Qtrix::Namespacing
     include Common
+    extend Logging
 
     class << self
       ##
@@ -75,6 +76,7 @@ module Qtrix
       ##
       # Clears the matrix so its rebuilt again when rows are requested.
       def clear!(namespace=:current)
+        debug("what if I told you I was clearing the matrix?")
         redis(namespace).del(REDIS_KEY)
       end
     end

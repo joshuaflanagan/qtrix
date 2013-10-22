@@ -3,12 +3,15 @@ require 'qtrix/matrix/common'
 
 module Qtrix
   module Matrix
+    include Qtrix::Logging
+
     ##
     # Carries out the construction of rows within the matrix for a number of
     # workers for a specific hostname.
     class RowBuilder
       include Qtrix::Namespacing
       include Matrix::Common
+      include Qtrix::Logging
       attr_reader :namespace, :hostname, :workers, :matrix,
                   :desired_distribution, :heads, :all_entries
 
@@ -42,6 +45,7 @@ module Qtrix
         end
         heads << row.entries[0].queue
         store(row)
+        debug("built row for matrix: #{row}")
         true
       end
 

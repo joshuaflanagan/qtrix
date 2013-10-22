@@ -4,6 +4,7 @@ require 'set'
 module Qtrix
   class Queue
     include Qtrix::Namespacing
+    extend Qtrix::Logging
     REDIS_KEY = :queue_weights
 
     class << self
@@ -11,6 +12,7 @@ module Qtrix
         namespace, map = extract_args(1, *args)
         map.each {|queue, weight| validate(queue.to_s, weight.to_f)}
         self.clear!(namespace)
+        info("changing queue weights for #{namespace}: #{map}")
         map.each {|queue, weight| redis(namespace).zadd(REDIS_KEY, weight.to_f, queue.to_s)}
         Qtrix::Matrix.clear!(namespace)
       end
@@ -22,7 +24,9 @@ module Qtrix
           result << self.new(namespace, tuple[0], tuple[1].to_f)
         end
         if result.empty?
-          raise Qtrix::ConfigurationError, "No queue distribution defined"
+          msg = "No queue distribution defined"
+          warn(msg)
+          raise Qtrix::ConfigurationError, msg
         end
         result
       end
@@ -43,6 +47,7 @@ module Qtrix
       end
 
       def clear!(namespace=:current)
+        info("clearing queue weights for #{namespace}")
         redis(namespace).del REDIS_KEY
         Qtrix::Matrix.clear! namespace
       end
