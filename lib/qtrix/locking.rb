@@ -17,14 +17,16 @@ module Qtrix
     # By default this uses a 10 second timeout.
     def with_lock(opts={}, &block)
       result = nil
-      opts[:start_time] = Time.now
+      start_time = Time.now.to_i
+      timeout_duration = opts.fetch(:timeout, 10)
+      timeout_callback = opts[:on_timeout]
       while(true) do
         if aquire_lock
           result = invoke_then_release_lock(&block)
           break
-        elsif we_have_timed_out(opts)
-          if opts[:on_timeout]
-            result = opts[:on_timeout].call
+        elsif we_have_timed_out(start_time, timeout_duration)
+          if timeout_callback
+            result = timeout_callback.call
             break
           else
             raise_timeout
@@ -47,13 +49,9 @@ module Qtrix
       redis.del(LOCK)
     end
 
-    def we_have_timed_out(opts)
-      time_delta = Time.now.to_i - opts[:start_time].to_i
-      opts[:timeout] && time_delta > timeout_length(opts)
-    end
-
-    def timeout_length(opts)
-      opts[:timeout].to_i || 10
+    def we_have_timed_out(start_time, timeout)
+      time_delta = Time.now.to_i - start_time
+      (timeout > 0) && (time_delta > timeout)
     end
 
     def aquire_lock
