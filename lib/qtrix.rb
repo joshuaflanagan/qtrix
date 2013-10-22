@@ -103,7 +103,7 @@ module Qtrix
   # of the system as a whole.
 
   def self.remove_configuration_set!(namespace)
-    with_lock timeout: 10 do
+    with_lock do
       Namespacing::Manager.instance.remove_namespace!(namespace)
     end
   rescue Exception => e
@@ -123,7 +123,7 @@ module Qtrix
   # a configuration set created with create_configuration_set.
 
   def self.activate_configuration_set!(namespace)
-    with_lock timeout: 10 do
+    with_lock do
       Namespacing::Manager.instance.change_current_namespace(namespace)
     end
   rescue Exception => e
@@ -153,7 +153,7 @@ module Qtrix
   #      float values.
 
   def self.map_queue_weights(*args)
-    with_lock timeout: 10 do
+    with_lock do
       config_set, map = extract_args(1, *args)
       Qtrix::Queue.map_queue_weights(config_set, map)
     end
@@ -175,7 +175,7 @@ module Qtrix
   # to override queues for.
 
   def self.add_override(*args)
-    with_lock timeout: 10 do
+    with_lock do
       config_set, queues, processes = extract_args(2, *args)
       Qtrix::Override.add(config_set, queues, processes)
       true
@@ -196,7 +196,7 @@ module Qtrix
   # processes:  Number of processes to remove from overriding.
 
   def self.remove_override(*args)
-    with_lock timeout: 10 do
+    with_lock do
       config_set, queues, processes = extract_args(2, *args)
       Qtrix::Override.remove(config_set, queues, processes)
       true
@@ -242,7 +242,7 @@ module Qtrix
   # Clears redis of all information related to the orchestration system
 
   def self.clear!
-    with_lock timeout: 10 do
+    with_lock do
       info "clearing data"
       Override.clear_claims!
       HostManager.clear!
