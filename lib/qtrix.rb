@@ -4,6 +4,7 @@ require 'qtrix/queue'
 require 'qtrix/override'
 require 'qtrix/matrix'
 require 'qtrix/host_manager'
+require 'qtrix/logging'
 
 ##
 # Facade into a dynamically adjusting global worker pool that auto
