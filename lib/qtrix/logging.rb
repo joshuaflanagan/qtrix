@@ -23,7 +23,7 @@ module Qtrix
 
     def log_level
       if ENV["QTRIX_LOG_LEVEL"]
-        Logger.const_get(ENV["QTRIX_LOG_LEVEL"].to_sym)
+        Logger.const_get(ENV["QTRIX_LOG_LEVEL"].upcase.to_sym)
       else
         Logger::INFO
       end

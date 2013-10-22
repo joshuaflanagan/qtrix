@@ -39,7 +39,7 @@ describe Qtrix::Logging do
     end
 
     it "should allow QTRIX_LOG_LEVEL to specify log level" do
-      ENV["QTRIX_LOG_LEVEL"] = "DEBUG"
+      ENV["QTRIX_LOG_LEVEL"] = "debug"
       object.logger.level.should == Logger::DEBUG
     end
 
@@ -69,7 +69,7 @@ describe Qtrix::Logging do
     end
   end
 
-  describe "#" do
+  describe "#error" do
     it "should route log message to logger" do
       object.error("error")
       File.read(log_path).should =~ /error/
