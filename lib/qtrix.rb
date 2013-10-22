@@ -1,4 +1,5 @@
 require 'qtrix/version'
+require 'qtrix/logging'
 require 'qtrix/namespacing'
 require 'qtrix/queue'
 require 'qtrix/override'
@@ -31,6 +32,7 @@ require 'qtrix/host_manager'
 
 module Qtrix
   include Namespacing
+  extend Logging
   ##
   # Specifies the redis connection configuration options as per the
   # redis gem.
@@ -66,13 +68,18 @@ module Qtrix
   # can have its own desired distribution and overrides.
 
   def self.create_configuration_set(namespace)
+    info("creating config set: #{namespace}")
     Namespacing::Manager.instance.add_namespace(namespace)
+  rescue Exception => e
+    error(e)
+    raise
   end
 
   ##
   # Duplicates the specified source configuration set with the
   # specified dest name.
   def self.clone_configuration_set(source, dest)
+    info("cloning config set #{source} to #{dest}")
     raise "source not specified" unless source
     raise "dest not specified" unless dest
     raise "#{source} does not exist" unless
@@ -83,6 +90,9 @@ module Qtrix
     self.create_configuration_set(dest)
     self.map_queue_weights(dest, Qtrix::Queue.to_map(source))
     self.overrides.each{|o| self.add_override(dest, o.queues, 1)}
+  rescue Exception => e
+    error(e)
+    raise
   end
 
   ##
@@ -92,6 +102,9 @@ module Qtrix
 
   def self.remove_configuration_set!(namespace)
     Namespacing::Manager.instance.remove_namespace!(namespace)
+  rescue Exception => e
+    error(e)
+    raise
   end
 
   ##
@@ -107,6 +120,9 @@ module Qtrix
 
   def self.activate_configuration_set!(namespace)
     Namespacing::Manager.instance.change_current_namespace(namespace)
+  rescue Exception => e
+    error(e)
+    raise
   end
 
   ##
@@ -133,6 +149,9 @@ module Qtrix
   def self.map_queue_weights(*args)
     config_set, map = extract_args(1, *args)
     Qtrix::Queue.map_queue_weights(config_set, map)
+  rescue Exception => e
+    error(e)
+    raise
   end
 
   ##
@@ -151,6 +170,9 @@ module Qtrix
     config_set, queues, processes = extract_args(2, *args)
     Qtrix::Override.add(config_set, queues, processes)
     true
+  rescue Exception => e
+    error(e)
+    raise
   end
 
   ##
@@ -167,6 +189,9 @@ module Qtrix
     config_set, queues, processes = extract_args(2, *args)
     Qtrix::Override.remove(config_set, queues, processes)
     true
+  rescue Exception => e
+    error(e)
+    raise
   end
 
   ##
@@ -184,16 +209,26 @@ module Qtrix
   def self.fetch_queues(hostname, workers)
     HostManager.ping(hostname)
     clear_matrix_if_any_hosts_offline
+    debug("fetching #{workers} queue lists for #{hostname}")
     overrides_queues = Qtrix::Override.overrides_for(hostname, workers)
+    debug("overrides for #{hostname}: #{overrides_queues}")
     delta = workers - overrides_queues.size
     matrix_queues = delta > 0 ? Matrix.fetch_queues(hostname, delta) : []
-    overrides_queues + matrix_queues.map(&append_orchestrated_flag)
+    debug("matrix queue lists: #{matrix_queues}")
+    decorated_queues = matrix_queues.map(&append_orchestrated_flag)
+    (overrides_queues + decorated_queues).tap do |queue_lists|
+      debug("all queue lists: #{queue_lists}")
+    end
+  rescue Exception => e
+    error(e)
+    raise
   end
 
   ##
   # Clears redis of all information related to the orchestration system
 
   def self.clear!
+    info "clearing data"
     Override.clear_claims!
     HostManager.clear!
     Matrix.clear!
@@ -202,6 +237,7 @@ module Qtrix
   private
   def self.clear_matrix_if_any_hosts_offline
     if HostManager.any_offline?
+      info "hosts detected offline: #{HostManager.offline.join(', ')}"
       clear!
     end
   end
