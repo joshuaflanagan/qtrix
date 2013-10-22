@@ -126,7 +126,7 @@ module Qtrix
   def self.fetch_queues(hostname, workers, opts={})
     HostManager.ping(hostname)
     clear_matrix_if_any_hosts_offline
-    with_lock timeout: opts.fetch(:timeout, 5), on_timeout: last_result do
+    with_lock wait_timeout: opts.fetch(:timeout, 5), on_timeout: last_result do
       debug("fetching #{workers} queue lists for #{hostname}")
       overrides_queues = Qtrix::Override.overrides_for(hostname, workers)
       debug("overrides for #{hostname}: #{overrides_queues}")
