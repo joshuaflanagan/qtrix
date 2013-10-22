@@ -27,7 +27,7 @@ describe Qtrix::Locking do
             block_executed = true
             raise 'uh oh'
           end
-        rescue StandardError => e
+        rescue RuntimeError => e
         end
         block_executed.should == true
         redis.get(:lock).should == nil
@@ -41,7 +41,7 @@ describe Qtrix::Locking do
           with_lock timeout: 0.1 do
             "test failed"
           end
-        }.to raise_error
+        }.to raise_error(Qtrix::Locking::Timeout)
       end
 
       it "should return on_timeout result if provided" do

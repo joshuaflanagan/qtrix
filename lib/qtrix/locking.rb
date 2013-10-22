@@ -5,6 +5,7 @@ module Qtrix
   module Locking
     include Qtrix::Namespacing
     LOCK = :lock
+    DEFAULT_TIMEOUT = 10
 
     ##
     # Attempts to obtain a global qtrix lock and if its obtained,
@@ -18,19 +19,15 @@ module Qtrix
     def with_lock(opts={}, &block)
       result = nil
       start_time = Time.now.to_i
-      timeout_duration = opts.fetch(:timeout, 10)
-      timeout_callback = opts[:on_timeout]
+      timeout_duration = opts[:timeout] || DEFAULT_TIMEOUT
+      on_timeout = opts[:on_timeout] || lambda{ raise Timeout }
       while(true) do
         if aquire_lock
           result = invoke_then_release_lock(&block)
           break
         elsif we_have_timed_out(start_time, timeout_duration)
-          if timeout_callback
-            result = timeout_callback.call
-            break
-          else
-            raise_timeout
-          end
+          result = on_timeout.call
+          break
         end
         sleep(0.1)
       end
@@ -78,6 +75,12 @@ module Qtrix
 
     def lock_value
       redis_time + 5 + 1
+    end
+
+    class Timeout < StandardError
+      def initialize(msg = "Failed to gain lock")
+        super
+      end
     end
   end
 end
