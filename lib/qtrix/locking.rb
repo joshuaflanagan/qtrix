@@ -4,6 +4,7 @@
 module Qtrix
   module Locking
     include Qtrix::Namespacing
+    include Qtrix::Logging
     LOCK = :lock
     DEFAULT_TIMEOUT = 10
 
@@ -26,6 +27,7 @@ module Qtrix
           result = invoke_then_release_lock(&block)
           break
         elsif we_have_timed_out(start_time, timeout_duration)
+          debug("failed to aquire lock in #{timeout_duration}")
           result = on_timeout.call
           break
         end
@@ -42,8 +44,8 @@ module Qtrix
     end
 
     def release_lock
-      # TODO only do this if we still hold the lock.
       redis.del(LOCK)
+      debug("Lock released")
     end
 
     def we_have_timed_out(start_time, timeout)
@@ -54,9 +56,11 @@ module Qtrix
     def aquire_lock
       result = false
       if redis.setnx(LOCK, lock_value)
+        debug("Lock aquired")
         result = true
       elsif now_has_surpassed(redis.get(LOCK))
         if now_has_surpassed(redis.getset(LOCK, lock_value))
+          debug("Lock aquired")
           result = true
         else
           result = false

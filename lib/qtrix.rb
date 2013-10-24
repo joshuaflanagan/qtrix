@@ -228,10 +228,10 @@ module Qtrix
       delta = workers - overrides_queues.size
       matrix_queues = delta > 0 ? Matrix.fetch_queues(hostname, delta) : []
       debug("matrix queue lists: #{matrix_queues}")
-      decorated_queues = matrix_queues.map(&append_orchestrated_flag)
-      @last_result = (overrides_queues + decorated_queues).tap do |queue_lists|
-        debug("all queue lists: #{queue_lists}")
-      end
+      new_result = overrides_queues + matrix_queues.map(&append_orchestrated_flag)
+      info("queue lists changed") if new_result != @last_result
+      debug("list details: #{new_result}")
+      @last_result = new_result
     end
   rescue Exception => e
     error(e)
