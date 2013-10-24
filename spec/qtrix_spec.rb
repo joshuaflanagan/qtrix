@@ -202,6 +202,16 @@ describe Qtrix do
         Qtrix::HostManager.all.should == ['host1']
       end
 
+      it "should return previous results if it cannot obtain a lock" do
+        result = Qtrix.fetch_queues('host1', 1)
+        result.should == [[:A, :B, :C, :D, :__orchestrated__]]
+
+        Qtrix.map_queue_weights Z: 1
+        Qtrix.redis.set :lock, Qtrix.redis_time + 15
+
+        result = Qtrix.fetch_queues('host1', 1)
+        result.should == [[:A, :B, :C, :D, :__orchestrated__]]
+      end
 
       context "no overrides" do
         it "should pick a queue list for a worker from the matrix" do
@@ -245,13 +255,13 @@ describe Qtrix do
         end
 
         it "should rebalance the matrix when hosts have been detected to be offline" do
-          start_time = Qtrix::HostManager.server_time
+          start_time = Qtrix::HostManager.redis_time
           Qtrix.fetch_queues('host1', 2).first.should == [:Z]
           Qtrix.fetch_queues('host2', 2).first.should_not == [:Z]
 
-          Qtrix::HostManager.stub(:server_time) {start_time + 60}
+          Qtrix::HostManager.stub(:redis_time) {start_time + 60}
           Qtrix.fetch_queues('host2', 2)
-          Qtrix::HostManager.stub(:server_time) {start_time + 120}
+          Qtrix::HostManager.stub(:redis_time) {start_time + 121}
           Qtrix.fetch_queues('host2', 2).first.should == [:Z]
         end
       end

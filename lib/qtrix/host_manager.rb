@@ -9,7 +9,7 @@ module Qtrix
       # Notifies that a host has checked in recently.
       def ping(host)
         debug("Pinging from #{host}")
-        redis.zadd(REDIS_KEY, server_time, host)
+        redis.zadd(REDIS_KEY, redis_time, host)
       end
 
       ##
@@ -42,16 +42,9 @@ module Qtrix
         redis.del(REDIS_KEY)
       end
 
-      ##
-      # Returns the time on the redis server.
-      def server_time
-        # Could use redis time command, but > 2.6 only.
-        redis.info.fetch("uptime_in_seconds").to_i
-      end
-
       private
       def is_mia?(time)
-        (time.to_i + mia_time) <= server_time
+        (time.to_i + mia_time) <= redis_time
       end
 
       def mia_time
