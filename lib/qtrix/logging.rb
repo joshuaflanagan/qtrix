@@ -6,6 +6,9 @@ module Qtrix
   module Logging
     def logger
       @qtrix_logger ||= Logger.new(log_path).tap do |l|
+        l.formatter = lambda {|sev,time,prog,msg|
+          "#{time} #{$$} - #{msg}\n"
+        }
         l.level = log_level
       end
     end
