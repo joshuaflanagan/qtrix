@@ -1,8 +1,15 @@
-### Note: We are currently stabilizing this library and is not recommended for production use yet.
-
 # Qtrix
 
-Qtrix is a means by which to intelligently pick prioritized queues for background workers.  It supports the following:
+For complex applications/domains, Resque and Sidekiq's simple queue
+prioritization mechanism (list of queues prioritized left to right) can be
+inadequate and prone to problems with resource contention and job/queue
+starvation.  Qtrix can help solve these problems by serving as a control center
+for intelligently assigning prioritized queue lists for background worker
+processes across N number of servers.  Using it in production at PeopleAdmin
+has allowed us to minimize the time that jobs lie idle in queues waiting
+for worker attention.
+
+It supports the following:
 
 * The concept of a global worker pool by which we can specifically configure individual workers across any number of servers.
 * Queue prioritization based on queue weightings.
