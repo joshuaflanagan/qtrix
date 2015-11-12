@@ -1,7 +1,7 @@
+source 'https://rubygems.org'
+
 gem 'rake'
-gem 'resque', '1.25.1'
-gem 'resque-pool', github: 'PeopleAdmin/resque-pool',
-                   branch: 'config_loader'
+gem 'resque', '~> 1.25.1'
+gem 'resque-pool', '~> 0.6'
 gem 'qtrix', path: '..'
 gem 'stressque', github: 'PeopleAdmin/stressque'
-gem 'capistrano'

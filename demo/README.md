@@ -9,13 +9,18 @@ This demonstrates Qtrix use using the following stack:
 ## Qtrix tinkering
 
 1.  Load a Qtrix config: ```bundle exec qtrix queues -y qtrix.yml```
-2.  Start a pool of workers: ```bundle exec resque-pool```
-3.  Start a console: ```bundle exec rake console```
-4.  Enqueue jobs in the console:  ```Resque.enqueue ImportJob```
-5.  Verify counts of jobs in the console:  ```Resque.redis.get ImportJob```
-6.  Change configuration: ```bundle exec qtrix queues -y qtrix-email-flood.yml```
-6.  See the workers and their new prioritization: ```ps aux | grep resque```
-6.  Continue to play with Qtrix configurations, enqueing jobs, etc...
+1.  Start a pool of workers: ```bundle exec resque-pool```
+1.  See the workers and their prioritization (you may have to wait a little until all workers start): ```ps | grep [r]esque```
+> Note: if you have `watch` on your system, run this in a terminal and keep it running:
+```watch -n 1 "ps | grep [r]esque"```
+1.  Start a console: ```bundle exec rake console```
+1.  Verify counts of jobs in the console (should be empty):  ```Resque.redis.get ImportJob```
+1.  Enqueue jobs in the console:  ```Resque.enqueue ImportJob```
+> All of the jobs simply increment a counter with the job's name
+1.  Verify counts of jobs in the console (should be 1):  ```Resque.redis.get ImportJob```
+1.  Change configuration: ```bundle exec qtrix queues -y qtrix-email-flood.yml```
+1.  Check the worker processes again (if not using `watch`): ```ps | grep [r]esque```
+1.  Continue to play with Qtrix configurations, enqueing jobs, etc...
 
 ## Simulation
 1.  Load a Qtrix config: ```bundle exec qtrix queues -y qtrix.yml```
