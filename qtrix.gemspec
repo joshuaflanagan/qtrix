@@ -20,6 +20,5 @@ Gem::Specification.new do |gem|
   gem.add_dependency "mixlib-cli", "1.3.0"
   gem.add_development_dependency 'rake', '~> 0.9'
   gem.add_development_dependency "rspec-core", "2.11.0"
-  gem.add_development_dependency "rspec-prof", "0.0.3"
-  gem.add_development_dependency "pry-debugger"
+  gem.add_development_dependency "rspec-prof", "0.0.5"
 end

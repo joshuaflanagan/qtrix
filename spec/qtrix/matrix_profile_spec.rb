@@ -37,41 +37,44 @@ describe Qtrix::Matrix do
   [2,5,50].each do |worker_count|
     context "managing #{worker_count*2} workers across 2 hosts" do
       # The following will generate profiling reports in the profiles dir.
-      profile(:all) do
-        before (:each) do
-          Qtrix::Matrix.clear!
-          Qtrix.map_queue_weights \
-            A: 40,
-            B: 30,
-            C: 20,
-            D: 10
-          Qtrix::Matrix.fetch_queues('host1', worker_count)
-          Qtrix::Matrix.fetch_queues('host2', worker_count)
+      around(:each) do |example|
+        RSpecProf.profile("profiles/#{example.metadata[:description_args].first.gsub(/\s+/,'_')}.html") do
+          example.run
         end
+      end
+      before (:each) do
+        Qtrix::Matrix.clear!
+        Qtrix.map_queue_weights \
+          A: 40,
+          B: 30,
+          C: 20,
+          D: 10
+        Qtrix::Matrix.fetch_queues('host1', worker_count)
+        Qtrix::Matrix.fetch_queues('host2', worker_count)
+      end
 
-        it "should maintain the desired distribution of queues" do
-          a_score.should be >= b_score
-          b_score.should be >= c_score
-          c_score.should be >= d_score
-        end
+      it "should maintain the desired distribution of queues" do
+        a_score.should be >= b_score
+        b_score.should be >= c_score
+        c_score.should be >= d_score
+      end
 
-        it "should have every queue at the head of at least one worker's queue list" do
-          a_heads.should_not == 0
-          b_heads.should_not == 0
-          c_heads.should_not == 0
-          d_heads.should_not == 0
-        end
+      it "should have every queue at the head of at least one worker queue list" do
+        a_heads.should_not == 0
+        b_heads.should_not == 0
+        c_heads.should_not == 0
+        d_heads.should_not == 0
+      end
 
-        it "should maintain desired distribution of queues at the heead of queue lists" do
-          a_heads.should be >= b_heads
-          b_heads.should be >= c_heads
-          c_heads.should be >= d_heads
-        end
+      it "should maintain desired distribution of queues at the heead of queue lists" do
+        a_heads.should be >= b_heads
+        b_heads.should be >= c_heads
+        c_heads.should be >= d_heads
+      end
 
-        it "should not have any duplicate queues in any rows" do
-          matrix.each do |row|
-            row.should == row.uniq
-          end
+      it "should not have any duplicate queues in any rows" do
+        matrix.each do |row|
+          row.should == row.uniq
         end
       end
     end
