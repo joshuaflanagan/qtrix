@@ -1,7 +1,6 @@
 require 'spec_helper'
 
 describe Qtrix::HostManager do
-  include Qtrix::Namespacing
   let(:redis_key) {Qtrix::HostManager::REDIS_KEY}
 
   describe "#ping" do
@@ -74,8 +73,8 @@ describe Qtrix::HostManager do
   context "host has not checked in recently" do
     before do
       Qtrix::HostManager.ping("localhost")
-      redis_time = Qtrix::HostManager.redis_time
-      Qtrix::HostManager.stub(:redis_time) {redis_time + 121}
+      redis_time = Qtrix::Persistence.redis_time
+      Qtrix::Persistence.stub(:redis_time) {redis_time + 121}
     end
 
     describe "#all" do

@@ -20,14 +20,11 @@ module Qtrix
           msg += "Type 'qtrix [command] --help' for usage"
           error(msg)
         end
-      rescue StandardError => e
-        error("Failure: #{e}")
+      #rescue StandardError => e
+        #error("Failure: #{e}")
       end
 
       private
-      def to_args(*args)
-        args.compact
-      end
 
       def write(msg)
         stdout.write("#{msg}\n")
@@ -49,11 +46,8 @@ Usage: qtrix [sub-command] [options]
 
 Where available sub-commands are:
 
-  config-sets:  Perform operations on configuration sets.
-  queues:       Perform operations on queues within a
-                configuration set.
-  overrides:    Perform operations on overrides within a
-                configuration set.
+  queues:       Perform operations on queues
+  overrides:    Perform operations on overrides
 
 For more information about the subcommands, try:
 
@@ -62,15 +56,12 @@ For more information about the subcommands, try:
       EOS
     end
 
-    require 'qtrix/cli/config_sets'
     require 'qtrix/cli/queues'
     require 'qtrix/cli/overrides'
 
     @commands = {
-      config_sets:      ConfigSets,
       overrides:        Overrides,
       queues:           Queues,
-      :"config-sets" => ConfigSets,
     }
 
     def self.get_command_class(str)

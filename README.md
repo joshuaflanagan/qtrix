@@ -18,16 +18,14 @@ It supports the following:
  * Queues with a higher priority will appear higher in the list of queues across the global worker pool than queues with a lower priority.
 * Real time tweaking of queue prioritization that is propagated across the global worker pool without further effort.
 * Overrides to specifically call out any number of workers to process a user-specified list of queues.
-* Multiple configuration sets that can be switched to on-the-fly to handle shifting requirements of the global worker pool (day, night, weekend, etc...).  As above, this is propagated across the global worker pool without further effort.
-* CLI to allow for scriptability of changes in queue prioritization or configuration sets.
+* CLI to allow for scriptability of changes in queue prioritization.
 * Easy API to allow for other interfaces to be developed.
 
 ## CLI
 The CLI is provided by the ```qtrix``` executable.  It provides several sub-commands to perform different operations within qtrix as follows:
 
-* **config_sets**:  Interact with configuration sets.
-* **queues**:  Interact with queues within a configuration set.
-* **overrides**: Interact with the overrides within a configuration set.
+* **queues**:  Interact with queues
+* **overrides**: Interact with the overrides
 
 Using this, you can manipulate the global worker pool's resources so that they are directed to handle any scenario in real time.  It can be run manually on any machine that can establish a connection to the redis instance backing the global worker pool configuration.  It can be scripted via cron or other means to react to changing queue prioritization/resource needs.
 
@@ -37,32 +35,9 @@ The following options are common to all/most commands:
 |option|description|
 |------|-----------|
 |--help|View help information about the command|
-|-c    |Direct the operation to a specific configuration set|
 |-h    |The redis host to connect to|
 |-p    |The redis port to connect to|
 |-n    |The redis database number to operate on|
-
-### Interacting with Configuration Sets
-To see all configuration sets:
-
-```bash
-qtrix config_sets -l
-```
-
-To see the current configuration set:
-```bash
-qtrix config_sets -c
-```
-
-To add a configuration set:
-```bash
-qtrix config_sets --create night
-```
-
-To remove a configuration set:
-```bash
-qtrix config_sets -d night
-```
 
 ### Viewing or Specifying Queue Priority
 To view the current queue priority:
@@ -128,11 +103,6 @@ pry(main)> load 'lib/qtrix.rb'
 pry(main)> Qtrix.operations
 => [:connection_config,
   :operations,
-  :configuration_sets,
-  :create_configuration_set,
-  :remove_configuration_set!,
-  :current_configuration_set,
-  :activate_configuration_set!,
   :desired_distribution,
   :map_queue_weights,
   :add_override,
@@ -141,37 +111,6 @@ pry(main)> Qtrix.operations
   :fetch_queues,
   :clear!]
 ```
-
-### Configuration Sets
-Several of the operations work on configuration sets as follows:
-
-```ruby
-pry(main)> Qtrix.configuration_sets
-=> [:default]
-
-pry(main)> Qtrix.current_configuration_set
-=> :default
-
-pry(main)> Qtrix.create_configuration_set :night
-=> true
-
-pry(main)> Qtrix.configuration_sets
-=> [:night, :default]
-
-pry(main)> Qtrix.activate_configuration_set! :night
-=> "OK"
-
-pry(main)> Qtrix.current_configuration_set
-=> :night
-
-pry(main)> Qtrix.activate_configuration_set! :default
-=> "OK"
-
-pry(main)> Qtrix.remove_configuration_set! :night
-=> true
-```
-
-Other operations are targettable to configuraiton sets, but will default to the current configuration set.
 
 ### Queue Weightings
 You can specify the mappings of weights to queues as follows:
@@ -184,54 +123,22 @@ Qtrix.map_queue_weights \
   D: 10
 ```
 
-By default, this will be targetted at the current configuration set.  You can also specify the configuration set you want to change the mappings for as follows:
-
-```ruby
-Qtrix.map_queue_weights :night, D: 40, C: 30, B: 20, A: 10
-```
-
 ### Desired Distribution of Queues
-The desired distribution of queues can be obtained with the ```Qtrix#desired_distribution``` method.  This is a list of objects encapsulating the queue name, the namespace, and their weight sorted according to weight.
+The desired distribution of queues can be obtained with the ```Qtrix#desired_distribution``` method.  This is a list of objects encapsulating the queue name and their weight sorted according to weight.
 
 ```ruby
 pry(main)> Qtrix.desired_distribution
 => [#<Qtrix::Queue:0x0000010c0cf758
 @name=:A,
-  @namespace=:current,
   @weight=40.0>,
 #<Qtrix::Queue:0x0000010c0cf6e0
   @name=:B,
-  @namespace=:current,
   @weight=30.0>,
 #<Qtrix::Queue:0x0000010c0cf668
   @name=:C,
-  @namespace=:current,
   @weight=20.0>,
 #<Qtrix::Queue:0x0000010c0cf5f0
   @name=:D,
-  @namespace=:current,
-  @weight=10.0>]
-```
-
-This is again targettable towards a configuration set.
-
-```ruby
-pry(main)> Qtrix.desired_distribution :night
-=> [#<Qtrix::Queue:0x007fdec6e73518
-@name=:D,
-  @namespace=:night,
-  @weight=40.0>,
-#<Qtrix::Queue:0x007fdec6e73400
-  @name=:C,
-  @namespace=:night,
-  @weight=30.0>,
-#<Qtrix::Queue:0x007fdec6e73360
-  @name=:B,
-  @namespace=:night,
-  @weight=20.0>,
-#<Qtrix::Queue:0x007fdec6e73298
-  @name=:A,
-  @namespace=:night,
   @weight=10.0>]
 ```
 
@@ -270,15 +177,6 @@ pry(main)> Qtrix.overrides
 => [#<Qtrix::Override:0x007fdec6aad370 @host=nil, @queues=[:X, :Y, :Z]>]
 ```
 
-Again, this is all targettable to a config set.
-
-```ruby
-pry(main)> Qtrix.add_override :night, [:I, :J, :K], 1
-=> true
-pry(main)> Qtrix.overrides :night
-=> [#<Qtrix::Override:0x007fdec6cb2508 @host=nil, @queues=[:I, :J, :K]>]
-```
-
 ### Choosing Queues
 Anytime a worker host needs some queues for its workers, it should call the Qtrix#fetch_queues method, passing its hostname and the number of workers to obtain queues for.  Overrides will be claimed first, then any additional queues will be obtained from the system that manages the desired distribution.
 
@@ -314,8 +212,6 @@ pry(main)> Qtrix.fetch_queues("host1", 3)
 pry(main)> Qtrix.fetch_queues("host2", 2)
 => [[:B, :A, :D, :C], [:A, :D, :C, :B]]
 ```
-
-This operation is currently not targettable to a configuration set.  It always operates on the current configuration set.
 
 ## Contributing
 

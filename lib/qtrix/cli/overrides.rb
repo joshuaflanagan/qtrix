@@ -5,10 +5,9 @@ module Qtrix
 
 Usage: qtrix overrides [options]
 
-Allows interaction with the overrides in a configuration set.  With this
-you can:
+Allows interaction with the overrides. With this you can:
 
-    * List all the overrides in the config set.
+    * List all the overrides
     * Add overrides for a list of queues and number of workers.
     * Remove overrides for a list of queues and number of workers.
 
@@ -42,11 +41,6 @@ Options include:
         description: 'Specify the list of workers for the override',
         default:     '1'
 
-      option :config_set,
-        short:       '-c CONFIG_SET_NAME',
-        long:        '--config-set CONFIG_SET_NAME',
-        description: 'Specify the config set being operated on'
-
       option :host,
         short:       '-h HOST',
         description: 'The host where redis is located',
@@ -68,25 +62,22 @@ Options include:
           msg += overrides.map(&stringify).join("\n")
           write(msg)
         elsif add_overrides_params_provided?
-          Qtrix.add_override *to_args(config_set, queue_list, workers)
+          Qtrix.add_override queue_list, workers
           write("Added #{workers} overrides for #{queue_list}")
         elsif delete_overrides_params_provided?
-          Qtrix.remove_override *to_args(config_set, queue_list, workers)
+          Qtrix.remove_override queue_list, workers
           write("Deleted #{workers} overrides for #{queue_list}")
         end
       end
 
       private
-      def config_set
-        config[:config_set]
-      end
 
       def stringify
         lambda {|override| string_value_of(override)}
       end
 
       def overrides
-        Qtrix.overrides config[:config_set]
+        Qtrix.overrides
       end
 
       def string_value_of(override)
