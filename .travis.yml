@@ -4,6 +4,8 @@ rvm:
 - 1.9.3
 services:
 - redis-server
+cache: bundler
+sudo: false
 notifications:
   email: false
   campfire:
