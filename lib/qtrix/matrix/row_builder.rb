@@ -1,4 +1,3 @@
-require 'bigdecimal'
 require 'qtrix/matrix/common'
 
 module Qtrix
@@ -59,9 +58,18 @@ module Qtrix
         row.entries << entry
       end
 
+      # BigDecimal marshalling does not roundtrip in 2.0
+      # https://gist.github.com/joshuaflanagan/44a8c4f3d8cf53b24e60
+      USE_BIG_DECIMAL = (RUBY_VERSION[0] == "1")
+
       def next_val_for(row)
         raw_result = 1.0 - sum_of_resource_percentages_for(row.entries)
-        BigDecimal.new(raw_result, 4)
+        if USE_BIG_DECIMAL
+          require 'bigdecimal'
+          BigDecimal.new(raw_result, 4)
+        else
+          raw_result.to_f
+        end
       end
 
       def sum_of_resource_percentages_for(entries)
