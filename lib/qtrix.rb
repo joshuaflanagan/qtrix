@@ -42,7 +42,7 @@ module Qtrix
   # Returns the public operations of the facade.  Useful when tinkering
   # in a REPL.
   def self.operations
-    self.public_methods
+    self.public_methods - Module.public_methods
   end
 
   ##
