@@ -29,7 +29,6 @@ require 'qtrix/locking'
 
 module Qtrix
   extend Logging
-  extend Locking
   ##
   # Specifies the redis connection configuration options as per the
   # redis gem.
@@ -121,6 +120,14 @@ module Qtrix
 
   def self.host_manager
     @host_manager ||= HostManager.new(Persistence.redis)
+  end
+
+  def self.locker
+    @locker ||= Qtrix::Locking.new(Persistence.redis)
+  end
+
+  def self.with_lock(*args, &block)
+    locker.with_lock(*args, &block)
   end
 
   ##

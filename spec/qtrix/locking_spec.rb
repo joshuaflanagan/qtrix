@@ -1,19 +1,19 @@
 require 'spec_helper'
 
 describe Qtrix::Locking do
-  include Qtrix::Locking
+  subject(:locker) { Qtrix::Locking.new(redis) }
 
   describe "#with_lock" do
     context "when lock is not held by other" do
       it "should invoke block" do
-        result = with_lock timeout: 0.1 do
+        result = locker.with_lock timeout: 0.1 do
           "test passed"
         end
         result.should == "test passed"
       end
 
       it "should release the lock when done" do
-        with_lock timeout: 0.1 do
+        locker.with_lock timeout: 0.1 do
           :do_nothing
         end
         redis.get(:lock).should == nil
@@ -22,7 +22,7 @@ describe Qtrix::Locking do
       it "should release the lock if block raises exception" do
         block_executed = false
         begin
-          with_lock timeout: 0.1 do
+          locker.with_lock timeout: 0.1 do
             redis.get(:lock).should_not be_nil
             block_executed = true
             raise 'uh oh'
@@ -38,7 +38,7 @@ describe Qtrix::Locking do
       it "should raise error if timeout exceeded" do
         redis.set :lock, Qtrix::Persistence.redis_time + 2
         expect {
-          with_lock timeout: 0.1 do
+          locker.with_lock timeout: 0.1 do
             "test failed"
           end
         }.to raise_error(Qtrix::Locking::Timeout)
@@ -47,7 +47,7 @@ describe Qtrix::Locking do
       it "should return on_timeout result if provided" do
         redis.set :lock, Qtrix::Persistence.redis_time + 2
         on_timeout = ->() {"it was locked"}
-        result = with_lock timeout: 0.1, on_timeout: on_timeout do
+        result = locker.with_lock timeout: 0.1, on_timeout: on_timeout do
           "it was not locked"
         end
         result.should == "it was locked"
@@ -61,7 +61,7 @@ describe Qtrix::Locking do
           sleep 0.2
           raw_redis.del "qtrix:default:lock"
         }
-        result = with_lock do
+        result = locker.with_lock do
           "lock was eventually released"
         end
         result.should == "lock was eventually released"
@@ -71,7 +71,7 @@ describe Qtrix::Locking do
     context "when encountering stale locks" do
       it "should execute its block" do
         redis.set :lock, Qtrix::Persistence.redis_time - 10
-        result = with_lock timeout: 0.2 do
+        result = locker.with_lock timeout: 0.2 do
           "We weren't held up by stale lock"
         end
         result.should == "We weren't held up by stale lock"
