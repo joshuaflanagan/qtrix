@@ -1,7 +1,7 @@
 require 'bigdecimal'
 
 module Qtrix
-  module Matrix
+  class Matrix
     ##
     # Responsible for picking a number of queue lists from the matrix
     # for a specific host.  Will return already picked lists if they
@@ -11,20 +11,21 @@ module Qtrix
     class QueuePicker
       include Common
       include Logging
-      attr_reader :reader, :hostname, :workers
 
-      def initialize(*args)
-        @reader, @hostname, @workers = *args
+      def initialize(matrix, reader, redis)
+        @matrix = matrix
+        @reader = reader
+        @redis = redis
       end
 
-      def pick!
-        delta = workers - rows_for_host.size
+      def pick!(hostname, workers)
+        delta = workers - rows_for_host(hostname).size
         if delta > 0
-          generate(delta)
+          generate(hostname, delta)
         elsif delta < 0
-          prune(delta)
+          prune(hostname, delta)
         end
-        rows_for_host.map(&to_queues).tap do |rows|
+        rows_for_host(hostname).map(&to_queues).tap do |rows|
           debug("matrix rows for #{hostname}: #{rows}")
         end
       end
@@ -34,19 +35,20 @@ module Qtrix
         lambda {|row| row.entries.map(&:queue)}
       end
 
-      def rows_for_host
-        reader.rows_for_host(hostname)
+      def rows_for_host(hostname)
+        @reader.rows_for_host(hostname)
       end
 
-      def generate(count)
-        RowBuilder.new(hostname, count).build
+      def generate(hostname, count)
+        row_builder = RowBuilder.new(@redis, @matrix.fetch, Qtrix.desired_distribution)
+        row_builder.build(hostname, count)
       end
 
-      def prune(count)
+      def prune(hostname, count)
         count.abs.times.each do
-          row = rows_for_host.pop
+          row = rows_for_host(hostname).pop
           debug("pruning from matrix: #{row}")
-          Persistence.redis.lrem(REDIS_KEY, -2, pack(row))
+          @redis.lrem(REDIS_KEY, -2, pack(row))
         end
       end
     end

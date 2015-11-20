@@ -46,37 +46,51 @@ module Qtrix
   # This ensures that the higher a queue appears in a list, the lower its
   # priority for the next generated list.
 
-  module Matrix
+  class Matrix
     include Common
-    extend Logging
+    include Logging
 
-    class << self
-      ##
-      # Obtain lists of queues for a number of worker processes
-      # on a server identified by the hostname.
-      def fetch_queues(*args)
-        hostname, workers = *args
-        QueuePicker.new(Reader, hostname, workers).pick!
-      end
+    def initialize(redis)
+      @redis = redis
+    end
 
-      ##
-      # Returns all of the queues in the table.
-      def fetch
-        Reader.fetch
-      end
+    ##
+    # Obtain lists of queues for a number of worker processes
+    # on a server identified by the hostname.
+    def fetch_queues(*args)
+      hostname, workers = *args
+      queue_picker.pick!(hostname, workers)
+    end
 
-      ##
-      # Fetches a matrix of simple queue names for each entry.
-      def to_table
-        Reader.to_table
-      end
+    ##
+    # Returns all of the queues in the table.
+    def fetch
+      reader.fetch
+    end
 
-      ##
-      # Clears the matrix so its rebuilt again when rows are requested.
-      def clear!
-        debug("what if I told you I was clearing the matrix?")
-        Persistence.redis.del(REDIS_KEY)
-      end
+    ##
+    # Fetches a matrix of simple queue names for each entry.
+    def to_table
+      reader.to_table
+    end
+
+    ##
+    # Clears the matrix so its rebuilt again when rows are requested.
+    def clear!
+      debug("what if I told you I was clearing the matrix?")
+      redis.del(REDIS_KEY)
+    end
+
+    private
+
+    attr_reader :redis
+
+    def reader
+      @reader ||= Reader.new(redis)
+    end
+
+    def queue_picker
+      @queue_picker ||= QueuePicker.new(self, reader, redis)
     end
   end
 end

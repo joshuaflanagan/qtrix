@@ -1,9 +1,7 @@
 require 'qtrix/matrix/common'
 
 module Qtrix
-  module Matrix
-    include Qtrix::Logging
-
+  class Matrix
     ##
     # Carries out the construction of rows within the matrix for a number of
     # workers for a specific hostname.
@@ -13,15 +11,15 @@ module Qtrix
       attr_reader :hostname, :workers, :matrix,
                   :desired_distribution, :heads, :all_entries
 
-      def initialize(*args)
-        @hostname, @workers = *args
-        @matrix = Qtrix::Matrix.fetch
-        @desired_distribution = Qtrix.desired_distribution
+      def initialize(redis, matrix, desired_distribution)
+        @redis = redis
+        @matrix = matrix
+        @desired_distribution = desired_distribution
         @heads = matrix.map{|row| row.entries.first.queue}
         @all_entries = matrix.map(&:entries).flatten
       end
 
-      def build
+      def build(hostname, workers)
         [].tap do |result|
           workers.times.each do
             queues_for_row = queue_prioritizer.current_priority_queue
@@ -76,7 +74,7 @@ module Qtrix
       end
 
       def store(row)
-        Persistence.redis.rpush(REDIS_KEY, pack(row))
+        @redis.rpush(REDIS_KEY, pack(row))
       end
     end
   end

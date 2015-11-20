@@ -1,6 +1,8 @@
 require 'qtrix/version'
 require 'qtrix/logging'
 require 'qtrix/persistence'
+require 'qtrix/queue_store'
+require 'qtrix/override_store'
 require 'qtrix/queue'
 require 'qtrix/override'
 require 'qtrix/matrix'
@@ -50,7 +52,7 @@ module Qtrix
   # relative_weight (weight / total weight of all queues).
 
   def self.desired_distribution
-    Queue.all_queues
+    queue_store.all_queues
   end
 
   ##
@@ -63,7 +65,7 @@ module Qtrix
 
   def self.map_queue_weights(map)
     with_lock do
-      Qtrix::Queue.map_queue_weights(map)
+      queue_store.map_queue_weights(map)
     end
   rescue Exception => e
     error(e)
@@ -83,7 +85,7 @@ module Qtrix
   def self.add_override(*args)
     with_lock do
       queues, processes = *args
-      Qtrix::Override.add(queues, processes)
+      override_store.add(queues, processes)
       true
     end
   rescue Exception => e
@@ -103,7 +105,7 @@ module Qtrix
   def self.remove_override(*args)
     with_lock do
       queues, processes = *args
-      Qtrix::Override.remove(queues, processes)
+      override_store.remove(queues, processes)
       true
     end
   rescue Exception => e
@@ -115,15 +117,31 @@ module Qtrix
   # Retrieves all currently defined overrides.
 
   def self.overrides
-    Qtrix::Override.all
+    override_store.all
+  end
+
+  def self.redis
+    @redis ||= Persistence.redis
   end
 
   def self.host_manager
-    @host_manager ||= HostManager.new(Persistence.redis)
+    @host_manager ||= HostManager.new(redis)
+  end
+
+  def self.queue_store
+    @queue_store ||= QueueStore.new(redis)
   end
 
   def self.locker
-    @locker ||= Qtrix::Locking.new(Persistence.redis)
+    @locker ||= Qtrix::Locking.new(redis)
+  end
+
+  def self.matrix_store
+    @matrix_store ||= Qtrix::Matrix.new(redis)
+  end
+
+  def self.override_store
+    @override_store ||= Qtrix::OverrideStore.new(redis, matrix_store)
   end
 
   def self.with_lock(*args, &block)
@@ -139,10 +157,10 @@ module Qtrix
     clear_matrix_if_any_hosts_offline
     with_lock timeout: opts.fetch(:timeout, 5), on_timeout: last_result do
       debug("fetching #{workers} queue lists for #{hostname}")
-      overrides_queues = Qtrix::Override.overrides_for(hostname, workers)
+      overrides_queues = override_store.overrides_for(hostname, workers)
       debug("overrides for #{hostname}: #{overrides_queues}")
       delta = workers - overrides_queues.size
-      matrix_queues = delta > 0 ? Matrix.fetch_queues(hostname, delta) : []
+      matrix_queues = delta > 0 ? matrix_store.fetch_queues(hostname, delta) : []
       debug("matrix queue lists: #{matrix_queues}")
       new_result = overrides_queues + matrix_queues.map(&append_orchestrated_flag)
       info("queue lists changed") if new_result != @last_result
@@ -156,17 +174,17 @@ module Qtrix
 
   ##
   # Clears redis of all information related to the orchestration system
-
   def self.clear!
     with_lock do
       info "clearing data"
-      Override.clear_claims!
+      override_store.clear_claims!
       host_manager.clear!
-      Matrix.clear!
+      matrix_store.clear!
     end
   end
 
   private
+
   def self.last_result
     lambda do
       if @last_result

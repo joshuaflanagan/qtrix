@@ -2,7 +2,15 @@ require 'bigdecimal'
 require 'qtrix/matrix/common'
 
 module Qtrix
-  module Matrix
+  class Matrix
+
+    class Model
+      attr_reader :rows
+      def initialize(rows)
+        @rows = rows
+      end
+    end
+
     ##
     # An entry (or cell) in the matrix, contains a single queue and its value
     # relative to the other entries to the left in the same row.

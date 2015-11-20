@@ -1,7 +1,7 @@
 require 'bigdecimal'
 
 module Qtrix
-  module Matrix
+  class Matrix
     module Common
       REDIS_KEY = :matrix
       def self.included(base)

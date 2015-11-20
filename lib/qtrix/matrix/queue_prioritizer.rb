@@ -2,7 +2,7 @@ require 'bigdecimal'
 require 'qtrix/matrix/common'
 
 module Qtrix
-  module Matrix
+  class Matrix
     ##
     # Maintains current prioritization of queues based on the
     # state of all rows in the matrix.
