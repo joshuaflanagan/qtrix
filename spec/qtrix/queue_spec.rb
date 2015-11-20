@@ -14,7 +14,7 @@ describe Qtrix::Queue do
   let(:matrix) {Qtrix::Matrix}
 
   context "comparing two queues with the same name and weights" do
-    let(:other_queue) {Qtrix::Queue.new(:a, 2)}
+    let(:other_queue) {Qtrix::Queue.new(:a, 2, 5)}
     describe "#==" do
       it "should return true" do
         queue1.should == other_queue
@@ -29,7 +29,7 @@ describe Qtrix::Queue do
   end
 
   context "comparing two queues with the same name and different weights" do
-    let(:other_queue) {other_queue = Qtrix::Queue.new(:a, 3)}
+    let(:other_queue) {other_queue = Qtrix::Queue.new(:a, 3, 5)}
     describe "#==" do
       it "should return false" do
         queue1.should_not == other_queue
@@ -44,7 +44,7 @@ describe Qtrix::Queue do
   end
 
   context "comparing two queues with the same weight and different names" do
-    let(:other_queue) {other_queue = Qtrix::Queue.new(:b, 2)}
+    let(:other_queue) {other_queue = Qtrix::Queue.new(:b, 2, 5)}
     describe "#==" do
       it "should return false" do
         queue1.should_not == other_queue
@@ -132,12 +132,6 @@ describe Qtrix::Queue do
     describe "#count" do
       it "should be the number of queues mapped" do
         Qtrix::Queue.count.should == 3
-      end
-    end
-
-    describe "#total_weight" do
-      it "should contain the sum of all weights" do
-        Qtrix::Queue.total_weight == 6
       end
     end
 
