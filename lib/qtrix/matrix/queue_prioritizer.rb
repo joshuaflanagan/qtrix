@@ -21,7 +21,7 @@ module Qtrix
         # Not a true priority queue, since we are sorting after all elements
         # are inserted
         queue = queue_priority_tuples_from desired_distribution
-        prioritized_queue = queue.sort &by_priority_of_tuple
+        prioritized_queue = queue.sort(&by_priority_of_tuple)
         to_simple_queues_from prioritized_queue
       end
 
@@ -59,7 +59,7 @@ module Qtrix
       end
 
       def sum_of(entries)
-        entries.inject(0) {|memo, e| memo += e.value}
+        entries.inject(0) {|memo, e| memo + e.value}
       end
 
       def entries_for(queue)

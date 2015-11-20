@@ -14,7 +14,7 @@ module Qtrix
       ##
       # All hosts known to the host manager.
       def all
-        host_entries = Persistence.redis.zrevrange(REDIS_KEY, 0, -1)
+        Persistence.redis.zrevrange(REDIS_KEY, 0, -1)
       end
 
       ##

@@ -9,7 +9,7 @@ class QtrixConfigLoader
   ##
   # Retrieve the configuration from Qtrix and pass back
   # as a properly formed resque-pool config hash.
-  def call(env)
+  def call(_env)
     queue_lists = queue_lists(pool_size)
     queue_lists.uniq.each_with_object({}) do |list, config|
       config[list] = count_times_in(queue_lists, list)
@@ -35,7 +35,7 @@ class QtrixConfigLoader
 end
 
 # Wire up resque-pool & qtrix
-Resque::Pool.after_prefork do |job|
+Resque::Pool.after_prefork do
   # We need to re-establish the client connection with each
   # worker fork.
   Resque.redis.client.reconnect

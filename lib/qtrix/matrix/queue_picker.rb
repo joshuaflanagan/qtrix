@@ -19,7 +19,6 @@ module Qtrix
 
       def pick!
         delta = workers - rows_for_host.size
-        new_queues = []
         if delta > 0
           generate(delta)
         elsif delta < 0

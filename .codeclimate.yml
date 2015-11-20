@@ -1,0 +1,13 @@
+---
+engines:
+  fixme:
+    enabled: true
+  rubocop:
+    enabled: true
+    exclude_fingerprints:
+    - 9790cc3b83e8b19b6a92ec346c6a009d
+ratings:
+  paths:
+  - "**.rb"
+exclude_paths:
+- spec/**/*

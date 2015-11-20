@@ -21,7 +21,7 @@ module Qtrix
       start_time = Time.now.to_i
       timeout_duration = opts[:timeout] || DEFAULT_TIMEOUT
       on_timeout = opts[:on_timeout] || lambda{ raise Timeout }
-      while(true) do
+      loop do
         if aquire_lock
           result = invoke_then_release_lock(&block)
           break
@@ -70,10 +70,6 @@ module Qtrix
 
     def now_has_surpassed(time)
       time.to_i < Persistence.redis_time
-    end
-
-    def raise_timeout
-      raise "Failed to gain lock"
     end
 
     def lock_value

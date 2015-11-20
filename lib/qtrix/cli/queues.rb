@@ -67,10 +67,6 @@ Options include:
         lambda {|queue| "  #{queue.name} (#{queue.weight})"}
       end
 
-      def string_value_of(queue)
-        "  #{q.name} (#{q.weight})"
-      end
-
       def queue_weights
         if config[:queue_weights]
           tuple_list = config[:queue_weights].split(",").map{|kv| kv.split(":")}

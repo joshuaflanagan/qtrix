@@ -72,7 +72,7 @@ module Qtrix
       end
 
       def sum_of_resource_percentages_for(entries)
-        entries.inject(0) {|memo, entry| memo += entry.resource_percentage}
+        entries.inject(0) {|memo, entry| memo + entry.resource_percentage}
       end
 
       def store(row)
