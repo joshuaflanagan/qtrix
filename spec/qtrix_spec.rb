@@ -75,7 +75,7 @@ describe Qtrix do
 
       it "should treat the request as a ping from the host" do
         Qtrix.fetch_queues('host1', 1)
-        Qtrix::HostManager.all.should == ['host1']
+        Qtrix.host_manager.all.should == ['host1']
       end
 
       it "should return previous results if it cannot obtain a lock" do

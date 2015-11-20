@@ -119,12 +119,16 @@ module Qtrix
     Qtrix::Override.all
   end
 
+  def self.host_manager
+    @host_manager ||= HostManager.new(Persistence.redis)
+  end
+
   ##
   # Retrieves lists of queues as appropriate to the overall system balance
   # for the number of workers specified for the given +hostname+.
 
   def self.fetch_queues(hostname, workers, opts={})
-    HostManager.ping(hostname)
+    host_manager.ping(hostname)
     clear_matrix_if_any_hosts_offline
     with_lock timeout: opts.fetch(:timeout, 5), on_timeout: last_result do
       debug("fetching #{workers} queue lists for #{hostname}")
@@ -150,7 +154,7 @@ module Qtrix
     with_lock do
       info "clearing data"
       Override.clear_claims!
-      HostManager.clear!
+      host_manager.clear!
       Matrix.clear!
     end
   end
@@ -167,8 +171,8 @@ module Qtrix
   end
 
   def self.clear_matrix_if_any_hosts_offline
-    if HostManager.any_offline?
-      info "hosts detected offline: #{HostManager.offline.join(', ')}"
+    if host_manager.any_offline?
+      info "hosts detected offline: #{host_manager.offline.join(', ')}"
       clear!
     end
   end
