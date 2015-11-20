@@ -66,7 +66,7 @@ describe Qtrix::Matrix do
         d_heads.should_not == 0
       end
 
-      it "should maintain desired distribution of queues at the heead of queue lists" do
+      it "should maintain desired distribution of queues at the head of queue lists" do
         a_heads.should be >= b_heads
         b_heads.should be >= c_heads
         c_heads.should be >= d_heads

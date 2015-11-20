@@ -7,7 +7,7 @@ describe Qtrix::CLI::Queues do
     Qtrix::CLI::Queues.new(stdout_stream, stderr_stream)
   }
   describe "queue --weights (-w)" do
-    it "set the queue weights for the current config set" do
+    it "set the queue weights" do
       queues.parse_options(["-w", "A:40,B:30"])
       queues.exec
       stdout.should match /OK/
@@ -25,7 +25,7 @@ describe Qtrix::CLI::Queues do
       end
     end
 
-    it "set the queue weights from a yaml file for the current config set" do
+    it "set the queue weights from a yaml file" do
       queues.parse_options(["-y", @path])
       queues.exec
       stdout.should match /OK/
@@ -34,7 +34,7 @@ describe Qtrix::CLI::Queues do
   end
 
   describe "queues --list (-l)" do
-    it "show the desired distribution list from the current config set" do
+    it "show the desired distribution list" do
       Qtrix.map_queue_weights A: 10
       queues.parse_options(["-l"])
       queues.exec

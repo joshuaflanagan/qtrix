@@ -4,7 +4,7 @@ describe Qtrix::HostManager do
   let(:redis_key) {Qtrix::HostManager::REDIS_KEY}
 
   describe "#ping" do
-    it "should store the ping in a sorted set in redis" do
+    it "should store the hostname in a sorted set in redis" do
       Qtrix::HostManager.ping("localhost")
       redis.zcard(redis_key).should == 1
     end
@@ -20,7 +20,7 @@ describe Qtrix::HostManager do
   end
 
   describe "#clear!" do
-    it "should clear any previously stored pings" do
+    it "should clear any previously stored hosts" do
       Qtrix::HostManager.ping("localhost")
       redis.zcard(redis_key).should == 1
       Qtrix::HostManager.clear!
