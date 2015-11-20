@@ -58,10 +58,6 @@ module Qtrix
         raise "weight of 0 or less" if weight <= 0
         raise "weight cannot be > 999" if weight > 999
       end
-
-      def high_low
-        lambda{|i,j| j.weight <=> i.weight}
-      end
     end
     attr_reader :name
 

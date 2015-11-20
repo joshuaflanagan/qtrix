@@ -29,7 +29,7 @@ module Qtrix
         dist.map{|queue| [queue, current_priority_of(queue)]}
       end
 
-      def by_priority_of_tuple(context={})
+      def by_priority_of_tuple
         lambda {|i, j| j[1] <=> i[1]}
       end
 
