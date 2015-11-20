@@ -1,21 +1,10 @@
 require 'spec_helper'
 
 describe Qtrix::Override do
-  include_context "established qtrix configuration"
-
   let(:queues) {[:a, :b, :c]}
   let(:matrix) {Qtrix::Matrix}
   let(:default_overrides) {raw_redis.llen("qtrix:default:overrides")}
   let(:override_claims_key) {Qtrix::Override::REDIS_CLAIMS_KEY}
-
-  before do
-    raw_redis.del "qtrix:default:overrides"
-  end
-
-  def override_count(ns=:current)
-    override = Qtrix::Override.all(ns).detect{|o| o.queues == queues}
-    override ? override.processes : 0
-  end
 
   describe "#add" do
     describe "with no namespace passed" do

@@ -3,18 +3,21 @@ require 'spec_helper'
 
 describe Qtrix do
   describe "#desired_distribution" do
-    include_context "established qtrix configuration"
     let(:desired_dist) {Qtrix.desired_distribution}
     let(:qtrix_queues) {Set.new(desired_dist.map(&:name)).to_a}
 
+    before do
+      Qtrix::Queue.map_queue_weights(A: 3, B: 2, C: 1)
+    end
+
     it "should include the list of known queues" do
       known_queues = Qtrix::Queue.all_queues
+      known_queues.should_not be_empty
       Qtrix.desired_distribution.should == known_queues
     end
   end
 
   describe "#map_queue_weights" do
-    include_context "established qtrix configuration"
     it "should persist the mappings of queues to weights" do
       Qtrix.map_queue_weights \
         B: 0.3,
@@ -28,7 +31,6 @@ describe Qtrix do
   end
 
   describe "override methods" do
-    include_context "established qtrix configuration"
     def override_counts
       [Qtrix::Override.all.size]
     end

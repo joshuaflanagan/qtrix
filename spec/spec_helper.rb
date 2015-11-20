@@ -30,15 +30,3 @@ shared_context "an established matrix" do
   end
   let(:matrix) {Qtrix::Matrix}
 end
-
-shared_context "established qtrix configuration" do
-  before do
-    Qtrix::Queue.map_queue_weights(A: 3, B: 2, C: 1)
-    Qtrix::Override.add([:C, :B, :A], 1)
-    Qtrix::Matrix.fetch_queues('host1', 1)
-
-    Qtrix::Queue.all_queues.should_not be_empty
-    Qtrix::Override.all.should_not be_empty
-    Qtrix::Matrix.fetch.should_not be_empty
-  end
-end

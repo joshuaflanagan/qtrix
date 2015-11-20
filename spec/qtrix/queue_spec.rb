@@ -66,7 +66,6 @@ describe Qtrix::Queue do
   end
 
   context "class instance methods" do
-    include_context "established qtrix configuration"
     describe "#map_queue_weights" do
       it "should remove old queues" do
         Qtrix::Queue.map_queue_weights A: 100
@@ -76,6 +75,7 @@ describe Qtrix::Queue do
       end
 
       it "should add new queues ordered according to weight" do
+        Qtrix::Queue.map_queue_weights(A: 3, B: 2, C: 1)
         results = Qtrix::Queue.all_queues
         results.map(&:name).should == [:A, :B, :C]
         results.map(&:weight).should == [3, 2, 1]
@@ -117,6 +117,7 @@ describe Qtrix::Queue do
         end
       end
       it "should contain all queues sorted by weight desc" do
+        Qtrix::Queue.map_queue_weights(A: 3, B: 2, C: 1)
         Qtrix::Queue.all_queues.map(&:name).should == [:A, :B, :C]
       end
     end
@@ -131,6 +132,7 @@ describe Qtrix::Queue do
 
     describe "#count" do
       it "should be the number of queues mapped" do
+        Qtrix::Queue.map_queue_weights(A: 3, B: 2, C: 1)
         Qtrix::Queue.count.should == 3
       end
     end

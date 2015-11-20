@@ -3,7 +3,11 @@ require 'set'
 
 describe Qtrix::Matrix do
   describe "namespaced operations" do
-    include_context "established qtrix configuration"
+    before do
+      Qtrix::Queue.map_queue_weights(A: 3, B: 2, C: 1)
+      Qtrix::Matrix.fetch_queues('host1', 1)
+    end
+
     let(:matrix) {Qtrix::Matrix}
 
     describe "#fetch" do
