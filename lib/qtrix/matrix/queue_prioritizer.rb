@@ -51,11 +51,11 @@ module Qtrix
       end
 
       def normal_priority_for(queue)
-        queue.resource_percentage / (1 + sum_of(entries_for(queue)))
+        queue.relative_weight / (1 + sum_of(entries_for(queue)))
       end
 
       def starting_priority_for(queue)
-        queue.resource_percentage * 10000
+        queue.relative_weight * 10000
       end
 
       def sum_of(entries)

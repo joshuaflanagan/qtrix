@@ -48,7 +48,7 @@ module Qtrix
   ##
   # Returns a list of objects that define the desired distribution
   # of workers.  Each element will contain the queue name, weight, and
-  # resource_percentage (weight / total weight of all queues).
+  # relative_weight (weight / total weight of all queues).
 
   def self.desired_distribution
     Queue.all_queues

@@ -58,10 +58,10 @@ describe Qtrix::Queue do
     end
   end
 
-  describe "#resource_percentage" do
+  describe "#relative_weight" do
     it "should equal weight / total weight of all queues" do
-      queue1.resource_percentage.should == 0.4
-      queue2.resource_percentage.should == 0.6
+      queue1.relative_weight.should == 0.4
+      queue2.relative_weight.should == 0.6
     end
   end
 

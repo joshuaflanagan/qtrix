@@ -74,8 +74,8 @@ module Qtrix
       name.hash - weight.hash
     end
 
-    def resource_percentage
-      @resource_percentage ||= weight.to_f / self.class.total_weight
+    def relative_weight
+      @relative_weight ||= weight.to_f / self.class.total_weight
     end
 
     def weight
