@@ -83,7 +83,7 @@ describe Qtrix do
         Qtrix.map_queue_weights Z: 1
         redis.set :lock, Qtrix::Persistence.redis_time + 15
 
-        result = Qtrix.fetch_queues('host1', 1)
+        result = Qtrix.fetch_queues('host1', 1, timeout: 0.5)
         result.should == [[:A, :B, :C, :D, :__orchestrated__]]
       end
 
