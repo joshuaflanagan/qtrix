@@ -8,6 +8,9 @@ services:
 - redis-server
 cache: bundler
 sudo: false
+addons:
+  code_climate:
+    repo_token: 372e51ba06971fc891747b4f1399cc9222678871c468c9205ebf1569077e53b2
 notifications:
   email: false
   campfire:
