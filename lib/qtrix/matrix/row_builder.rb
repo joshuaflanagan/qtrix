@@ -50,7 +50,7 @@ module Qtrix
       def build_entry(row, queue, entry_val)
         entry = Entry.new(
           queue.name,
-          queue.resource_percentage,
+          queue.relative_weight,
           entry_val
         )
         all_entries << entry

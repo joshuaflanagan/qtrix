@@ -17,16 +17,22 @@ module Qtrix
 
 
       def all_queues
+        # load queues as an array of arrays, where each inner array is a
+        # name and weight: [[:queueA, 5.0],[:queueB, 3.0]]
         raw = Persistence.redis.zrevrange(REDIS_KEY, 0, -1, withscores: true)
-        result = raw.each_with_object([]) do |tuple, result|
-          result << self.new(tuple[0], tuple[1].to_f)
-        end
-        if result.empty?
+        total_weight = raw.inject(0){|sum,tuple| sum + tuple[1]}
+
+        # build immutable Queue instances
+        queues = raw.map{|name, weight|
+          relative_weight = weight.to_f / total_weight
+          self.new(name, weight, relative_weight)
+        }
+        if queues.empty?
           msg = "No queue distribution defined"
           warn(msg)
           raise Qtrix::ConfigurationError, msg
         end
-        result
+        queues
       end
 
       def to_map
@@ -38,10 +44,6 @@ module Qtrix
 
       def count
         Persistence.redis.zcard(REDIS_KEY)
-      end
-
-      def total_weight
-        all_queues.inject(0) {|memo, queue| memo += queue.weight}
       end
 
       def clear!
@@ -58,16 +60,14 @@ module Qtrix
         raise "weight of 0 or less" if weight <= 0
         raise "weight cannot be > 999" if weight > 999
       end
-
-      def high_low
-        lambda{|i,j| j.weight <=> i.weight}
-      end
     end
-    attr_reader :name
 
-    def initialize(name, weight)
+    attr_reader :name, :weight, :relative_weight
+
+    def initialize(name, weight, relative_weight)
       @name = name.to_sym
       @weight = weight.to_f
+      @relative_weight = relative_weight
     end
 
     def ==(other)
@@ -76,14 +76,6 @@ module Qtrix
 
     def hash
       name.hash - weight.hash
-    end
-
-    def resource_percentage
-      @resource_percentage ||= weight.to_f / self.class.total_weight
-    end
-
-    def weight
-      @weight ||= Persistence.redis.zscore(REDIS_KEY, name).to_f
     end
   end
 end

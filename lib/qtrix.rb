@@ -42,13 +42,13 @@ module Qtrix
   # Returns the public operations of the facade.  Useful when tinkering
   # in a REPL.
   def self.operations
-    self.public_methods
+    self.public_methods - Module.public_methods
   end
 
   ##
   # Returns a list of objects that define the desired distribution
   # of workers.  Each element will contain the queue name, weight, and
-  # resource_percentage (weight / total weight of all queues).
+  # relative_weight (weight / total weight of all queues).
 
   def self.desired_distribution
     Queue.all_queues
@@ -123,10 +123,10 @@ module Qtrix
   # Retrieves lists of queues as appropriate to the overall system balance
   # for the number of workers specified for the given +hostname+.
 
-  def self.fetch_queues(hostname, workers)
+  def self.fetch_queues(hostname, workers, opts={})
     HostManager.ping(hostname)
     clear_matrix_if_any_hosts_offline
-    with_lock timeout: 5, on_timeout: last_result do
+    with_lock timeout: opts.fetch(:timeout, 5), on_timeout: last_result do
       debug("fetching #{workers} queue lists for #{hostname}")
       overrides_queues = Qtrix::Override.overrides_for(hostname, workers)
       debug("overrides for #{hostname}: #{overrides_queues}")
