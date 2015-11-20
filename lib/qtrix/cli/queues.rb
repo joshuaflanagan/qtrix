@@ -5,8 +5,7 @@ module Qtrix
 
 Usage: qtrix queues [options]
 
-Allows observance and manipulation of queue priority within a
-configuration set.  With this you can:
+Allows observance and manipulation of queue priority. With this you can:
 
     * View the current queue priority in the global worker pool.
     * Specify the weightings for all queues inline or via yaml
@@ -30,11 +29,6 @@ Options include:
         long:        '--list',
         description: 'Lists the queues by their desired distribution'
 
-      option :config_set,
-        short:       '-c CONFIG_SET_NAME',
-        long:        '--config-set CONFIG_SET_NAME',
-        description: 'Specify the config set being operated on'
-
       option :host,
         short:       '-h HOST',
         description: 'The host where redis is located',
@@ -52,7 +46,7 @@ Options include:
 
       def exec_behavior
         if config[:desired_distribution]
-          desired_dist = Qtrix.desired_distribution(config[:config_set])
+          desired_dist = Qtrix.desired_distribution
           msg = "Queues:\n"
           msg += desired_dist.map(&stringify).join("\n")
           write(msg)
@@ -65,7 +59,7 @@ Options include:
 
       private
       def map_queue_weights(weight_map)
-        Qtrix.map_queue_weights *to_args(config_set, weight_map)
+        Qtrix.map_queue_weights weight_map
         write("OK")
       end
 
@@ -88,10 +82,6 @@ Options include:
         if config[:queue_weights_yaml]
           YAML.load(File.read(config[:queue_weights_yaml]))
         end
-      end
-
-      def config_set
-        config[:config_set]
       end
     end
   end

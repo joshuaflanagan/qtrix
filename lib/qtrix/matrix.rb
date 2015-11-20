@@ -47,37 +47,35 @@ module Qtrix
   # priority for the next generated list.
 
   module Matrix
-    include Qtrix::Namespacing
     include Common
     extend Logging
 
     class << self
       ##
       # Obtain lists of queues for a number of worker processes
-      # on a server identified by the hostname.  This works
-      # within the current namespace only.
+      # on a server identified by the hostname.
       def fetch_queues(*args)
-        namespace, hostname, workers = extract_args(2, *args)
-        QueuePicker.new(namespace, Reader, hostname, workers).pick!
+        hostname, workers = *args
+        QueuePicker.new(Reader, hostname, workers).pick!
       end
 
       ##
       # Returns all of the queues in the table.
-      def fetch(namespace=:current)
-        Reader.fetch(namespace)
+      def fetch
+        Reader.fetch
       end
 
       ##
       # Fetches a matrix of simple queue names for each entry.
-      def to_table(namespace=:current)
-        Reader.to_table(namespace)
+      def to_table
+        Reader.to_table
       end
 
       ##
       # Clears the matrix so its rebuilt again when rows are requested.
-      def clear!(namespace=:current)
+      def clear!
         debug("what if I told you I was clearing the matrix?")
-        redis(namespace).del(REDIS_KEY)
+        Persistence.redis.del(REDIS_KEY)
       end
     end
   end

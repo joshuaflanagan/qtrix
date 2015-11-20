@@ -36,7 +36,7 @@ describe Qtrix::Locking do
 
     context "when lock is held by other" do
       it "should raise error if timeout exceeded" do
-        redis.set :lock, redis_time + 2
+        redis.set :lock, Qtrix::Persistence.redis_time + 2
         expect {
           with_lock timeout: 0.1 do
             "test failed"
@@ -45,7 +45,7 @@ describe Qtrix::Locking do
       end
 
       it "should return on_timeout result if provided" do
-        redis.set :lock, redis_time + 2
+        redis.set :lock, Qtrix::Persistence.redis_time + 2
         on_timeout = ->() {"it was locked"}
         result = with_lock timeout: 0.1, on_timeout: on_timeout do
           "it was not locked"
@@ -56,7 +56,7 @@ describe Qtrix::Locking do
 
     context "when lock is held then released by other" do
       it "should return the block value" do
-        redis.set :lock, redis_time
+        redis.set :lock, Qtrix::Persistence.redis_time
         fork {
           sleep 0.2
           raw_redis.del "qtrix:default:lock"
@@ -70,7 +70,7 @@ describe Qtrix::Locking do
 
     context "when encountering stale locks" do
       it "should execute its block" do
-        redis.set :lock, redis_time - 10
+        redis.set :lock, Qtrix::Persistence.redis_time - 10
         result = with_lock timeout: 0.2 do
           "We weren't held up by stale lock"
         end

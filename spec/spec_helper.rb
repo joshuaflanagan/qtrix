@@ -3,13 +3,17 @@ require 'qtrix'
 
 RSpec.configure do |config|
   config.before(:each) do
-    Qtrix::Namespacing::Manager.instance.connection_config db: 15
-    Qtrix::Namespacing::Manager.instance.redis.flushdb
+    Qtrix::Persistence.instance.connection_config db: 15
+    raw_redis.flushdb
   end
 end
 
 def raw_redis
   Redis.connect db: 15
+end
+
+def redis
+  Qtrix::Persistence.redis
 end
 
 shared_context "an established matrix" do
@@ -24,10 +28,8 @@ shared_context "an established matrix" do
   let(:matrix) {Qtrix::Matrix}
 end
 
-shared_context "established default and night namespaces" do
-  let(:namespace_mgr) {Qtrix::Namespacing::Manager.instance}
+shared_context "established qtrix configuration" do
   before do
-    namespace_mgr.change_current_namespace(:default)
     Qtrix::Queue.map_queue_weights(A: 3, B: 2, C: 1)
     Qtrix::Override.add([:C, :B, :A], 1)
     Qtrix::Matrix.fetch_queues('host1', 1)
@@ -35,14 +37,5 @@ shared_context "established default and night namespaces" do
     Qtrix::Queue.all_queues.should_not be_empty
     Qtrix::Override.all.should_not be_empty
     Qtrix::Matrix.fetch.should_not be_empty
-
-    namespace_mgr.add_namespace(:night)
-    Qtrix::Queue.map_queue_weights(:night, X: 4, Y: 2, Z: 1)
-    Qtrix::Override.add(:night, [:Z, :Y, :X], 1)
-    Qtrix::Matrix.fetch_queues(:night, 'host1', 1)
-
-    Qtrix::Queue.all_queues(:night).should_not be_empty
-    Qtrix::Override.all(:night).should_not be_empty
-    Qtrix::Matrix.fetch(:night).should_not be_empty
   end
 end

@@ -9,13 +9,12 @@ module Qtrix
     # prune old lists as they are no longer needed, maintaining a row
     # in the matrix for the number of workers for the host.
     class QueuePicker
-      include Namespacing
       include Common
       include Logging
-      attr_reader :namespace, :reader, :hostname, :workers
+      attr_reader :reader, :hostname, :workers
 
       def initialize(*args)
-        @namespace, @reader, @hostname, @workers = extract_args(3, *args)
+        @reader, @hostname, @workers = *args
       end
 
       def pick!
@@ -37,18 +36,18 @@ module Qtrix
       end
 
       def rows_for_host
-        reader.rows_for_host(hostname, namespace)
+        reader.rows_for_host(hostname)
       end
 
       def generate(count)
-        RowBuilder.new(namespace, hostname, count).build
+        RowBuilder.new(hostname, count).build
       end
 
       def prune(count)
         count.abs.times.each do
           row = rows_for_host.pop
           debug("pruning from matrix: #{row}")
-          redis(namespace).lrem(REDIS_KEY, -2, pack(row))
+          Persistence.redis.lrem(REDIS_KEY, -2, pack(row))
         end
       end
     end

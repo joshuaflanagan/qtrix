@@ -72,30 +72,4 @@ describe Qtrix::CLI::Overrides do
       Qtrix.overrides.size.should == 2
     end
   end
-
-  describe "targeting to config sets" do
-    before(:each) do
-      Qtrix.create_configuration_set "night"
-    end
-
-    it "should be able to create overrides in a specified config set" do
-      overrides.parse_options(%w{-c night -a -q A})
-      overrides.exec
-      Qtrix.overrides('night').size.should == 1
-    end
-
-    it "should be able to list overrides in a specified config set" do
-      Qtrix.add_override('night', ['A'], 1)
-      overrides.parse_options(%w{-c night -l})
-      overrides.exec
-      stdout.should match /A/
-    end
-
-    it "should be able to delete overrides from a specified config set" do
-      Qtrix.add_override('night', ['A'], 1)
-      overrides.parse_options(%w{-c night -d -q A})
-      overrides.exec
-      Qtrix.overrides('night').size.should == 0
-    end
-  end
 end

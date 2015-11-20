@@ -3,7 +3,6 @@
 # the algorithm outlined here: http://redis.io/commands/setnx
 module Qtrix
   module Locking
-    include Qtrix::Namespacing
     include Qtrix::Logging
     LOCK = :lock
     DEFAULT_TIMEOUT = 10
@@ -44,7 +43,7 @@ module Qtrix
     end
 
     def release_lock
-      redis.del(LOCK)
+      Persistence.redis.del(LOCK)
       debug("Lock released")
     end
 
@@ -55,11 +54,11 @@ module Qtrix
 
     def aquire_lock
       result = false
-      if redis.setnx(LOCK, lock_value)
+      if Persistence.redis.setnx(LOCK, lock_value)
         debug("Lock aquired")
         result = true
-      elsif now_has_surpassed(redis.get(LOCK))
-        if now_has_surpassed(redis.getset(LOCK, lock_value))
+      elsif now_has_surpassed(Persistence.redis.get(LOCK))
+        if now_has_surpassed(Persistence.redis.getset(LOCK, lock_value))
           debug("Lock aquired")
           result = true
         else
@@ -70,7 +69,7 @@ module Qtrix
     end
 
     def now_has_surpassed(time)
-      time.to_i < redis_time
+      time.to_i < Persistence.redis_time
     end
 
     def raise_timeout
@@ -78,7 +77,7 @@ module Qtrix
     end
 
     def lock_value
-      redis_time + 5 + 1
+      Persistence.redis_time + 5 + 1
     end
 
     class Timeout < StandardError

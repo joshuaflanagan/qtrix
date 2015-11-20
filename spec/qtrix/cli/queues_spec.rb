@@ -13,14 +13,6 @@ describe Qtrix::CLI::Queues do
       stdout.should match /OK/
       Qtrix.desired_distribution.size.should == 2
     end
-
-    it "(-c) set the queue weights for a specific configuration set" do
-      Qtrix.create_configuration_set "night"
-      queues.parse_options(["-w", "A:100", "-c", "night"])
-      queues.exec
-      stdout.should match /OK/
-      Qtrix.desired_distribution("night").size.should == 1
-    end
   end
 
   describe "queue --yaml (-y)" do
@@ -39,14 +31,6 @@ describe Qtrix::CLI::Queues do
       stdout.should match /OK/
       Qtrix.desired_distribution.size.should == 4
     end
-
-    it "(-c) set the queue weights from a yaml file for a specific config set" do
-      Qtrix.create_configuration_set "night"
-      queues.parse_options(["-y", @path, "-c", "night"])
-      queues.exec
-      stdout.should match /OK/
-      Qtrix.desired_distribution("night").size.should == 4
-    end
   end
 
   describe "queues --list (-l)" do
@@ -56,15 +40,6 @@ describe Qtrix::CLI::Queues do
       queues.exec
       stdout.should match /A/
       stdout.should match /10/
-    end
-
-    it "(-c) show the desired distribution list for a specific config set" do
-      Qtrix.create_configuration_set "night"
-      Qtrix.map_queue_weights "night", B: 11
-      queues.parse_options(["-l", "-c", "night"])
-      queues.exec
-      stdout.should match /B/
-      stdout.should match /11/
     end
   end
 end

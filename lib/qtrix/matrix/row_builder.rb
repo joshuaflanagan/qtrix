@@ -8,16 +8,15 @@ module Qtrix
     # Carries out the construction of rows within the matrix for a number of
     # workers for a specific hostname.
     class RowBuilder
-      include Qtrix::Namespacing
       include Matrix::Common
       include Qtrix::Logging
-      attr_reader :namespace, :hostname, :workers, :matrix,
+      attr_reader :hostname, :workers, :matrix,
                   :desired_distribution, :heads, :all_entries
 
       def initialize(*args)
-        @namespace, @hostname, @workers = extract_args(2, *args)
-        @matrix = Qtrix::Matrix.fetch(namespace)
-        @desired_distribution = Qtrix.desired_distribution(namespace)
+        @hostname, @workers = *args
+        @matrix = Qtrix::Matrix.fetch
+        @desired_distribution = Qtrix.desired_distribution
         @heads = matrix.map{|row| row.entries.first.queue}
         @all_entries = matrix.map(&:entries).flatten
       end
@@ -77,7 +76,7 @@ module Qtrix
       end
 
       def store(row)
-        redis(namespace).rpush(REDIS_KEY, pack(row))
+        Persistence.redis.rpush(REDIS_KEY, pack(row))
       end
     end
   end

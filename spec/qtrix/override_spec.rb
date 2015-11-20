@@ -1,18 +1,15 @@
 require 'spec_helper'
 
 describe Qtrix::Override do
-  include Qtrix::Namespacing
-  include_context "established default and night namespaces"
+  include_context "established qtrix configuration"
 
   let(:queues) {[:a, :b, :c]}
   let(:matrix) {Qtrix::Matrix}
   let(:default_overrides) {raw_redis.llen("qtrix:default:overrides")}
-  let(:night_overrides) {raw_redis.llen("qtrix:night:overrides")}
   let(:override_claims_key) {Qtrix::Override::REDIS_CLAIMS_KEY}
 
   before do
     raw_redis.del "qtrix:default:overrides"
-    raw_redis.del "qtrix:night:overrides"
   end
 
   def override_count(ns=:current)
@@ -42,14 +39,6 @@ describe Qtrix::Override do
         matrix.to_table.should be_empty
       end
     end
-
-    describe "with namespace passed" do
-      it "should persist the override in the target ns" do
-        Qtrix::Override.add(:night, queues, 1)
-        night_overrides.should == 1
-        default_overrides.should == 0
-      end
-    end
   end
 
   describe "#remove" do
@@ -63,20 +52,6 @@ describe Qtrix::Override do
       it "should blow away the matrix in the current ns" do
         Qtrix::Override.remove(queues, 100)
         matrix.to_table.should be_empty
-      end
-    end
-
-    describe "with namespace passed" do
-      it "should remove the override in the target ns" do
-        Qtrix::Override.add(:night, queues, 2)
-        Qtrix::Override.remove(:night, queues, 1)
-        night_overrides.should == 1
-        default_overrides.should == 0
-      end
-
-      it "should blow away the matrix in the target ns" do
-        Qtrix::Override.remove(:night, queues, 100)
-        matrix.to_table(:night).should be_empty
       end
     end
   end
@@ -103,28 +78,6 @@ describe Qtrix::Override do
         matrix.to_table.should be_empty
       end
     end
-
-    describe "with namespace passed" do
-      before do
-        Qtrix::Override.add(:night, queues, 1)
-        Qtrix::Override.overrides_for(:night, 'localhost', 1)
-      end
-
-      it "should drop override claims from redis" do
-        Qtrix::Override.clear_claims!(:night)
-        redis(:night).exists(Qtrix::Override::REDIS_CLAIMS_KEY).should_not == true
-      end
-
-      it "should not drop the overrides from redis" do
-        Qtrix::Override.clear_claims!(:night)
-        redis(:night).exists(Qtrix::Override::REDIS_KEY).should == true
-      end
-
-      it "should blow away the matrix" do
-        Qtrix::Override.clear_claims!(:night)
-        matrix.to_table(:night).should be_empty
-      end
-    end
   end
 
   describe "#clear!" do
@@ -149,28 +102,6 @@ describe Qtrix::Override do
         matrix.to_table.should be_empty
       end
     end
-
-    describe "with namespace passed" do
-      before do
-        Qtrix::Override.add(:night, queues, 1)
-        Qtrix::Override.overrides_for(:night, 'localhost', 1)
-      end
-
-      it "should drop override data from the target namespace" do
-        Qtrix::Override.clear!(:night)
-        raw_redis.llen("qtrix:night:overrides").should == 0
-      end
-
-      it "should drop override claim data from target namespace" do
-        Qtrix::Override.clear!(:night)
-        raw_redis.llen("qtrix:night:override_claims").should == 0
-      end
-
-      it "should blow away the matrix in target namespace" do
-        Qtrix::Override.clear!(:night)
-        matrix.to_table(:night).should be_empty
-      end
-    end
   end
 
   describe "#overrides_for" do
@@ -192,7 +123,7 @@ describe Qtrix::Override do
       it "should only generate as many override claims as exist overrides" do
         Qtrix::Override.add(queues, 1)
         Qtrix::Override.overrides_for("host1", 5)
-        Qtrix::Override.redis.llen(override_claims_key).should == 1
+        redis.llen(override_claims_key).should == 1
       end
 
       it "should associate the host with the override" do
@@ -217,14 +148,6 @@ describe Qtrix::Override do
       it "should not return overrides beyond the requested number of overrides" do
         Qtrix::Override.add(queues, 5)
         Qtrix::Override.overrides_for("host1", 1).should == [queues]
-      end
-    end
-
-    describe "with namespace passed" do
-      it "should limit the operation to the passed namespace" do
-        Qtrix::Override.add(:night, queues, 1)
-        Qtrix::Override.overrides_for(:current, "host", 1).should == []
-        Qtrix::Override.overrides_for(:night, "host", 1).should == [queues]
       end
     end
   end
