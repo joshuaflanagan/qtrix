@@ -15,8 +15,8 @@ module Qtrix
         @redis = redis
         @matrix = matrix
         @desired_distribution = desired_distribution
-        @heads = matrix.map{|row| row.entries.first.queue}
-        @all_entries = matrix.map(&:entries).flatten
+        @heads = matrix.rows.map{|row| row.entries.first.queue}
+        @all_entries = matrix.rows.map(&:entries).flatten
       end
 
       def build(hostname, workers)

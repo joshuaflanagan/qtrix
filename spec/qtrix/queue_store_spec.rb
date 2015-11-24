@@ -41,11 +41,11 @@ describe Qtrix::QueueStore do
 
     it "should blow away the matrix" do
       matrix_store.update_matrix_to_satisfy_request!('host1', 1)
-      matrix_store.to_table.should_not be_empty
+      matrix_store.fetch.to_table.should_not be_empty
       queue_store.map_queue_weights \
         A: 1,
         B: 2
-      matrix_store.to_table.should be_empty
+      matrix_store.fetch.to_table.should be_empty
     end
   end
 
@@ -86,7 +86,7 @@ describe Qtrix::QueueStore do
     end
 
     it "should blow away the matrix" do
-      matrix_store.to_table.should be_empty
+      matrix_store.fetch.to_table.should be_empty
     end
   end
 end

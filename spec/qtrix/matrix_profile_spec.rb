@@ -7,13 +7,13 @@ describe Qtrix::Matrix do
   # being the next queue in the row, 2 for being the 3rd queue in the row
   # and 1 for being the last queue in the row.
   def cumulative_score_of(queue)
-    matrix = matrix_store.to_table
+    matrix = matrix_store.fetch.to_table
     scores = matrix.map{|row| 4 - row.index(queue)}
     scores.inject(0) {|m, s| m += s}
   end
 
   def head_count_of(target_queue)
-    matrix = matrix_store.to_table
+    matrix = matrix_store.fetch.to_table
     heads = matrix.map{|row| row[0]}
     heads.select{|queue| queue == target_queue}.size
   end
@@ -26,7 +26,7 @@ describe Qtrix::Matrix do
   let(:b_heads) {head_count_of(:B)}
   let(:c_heads) {head_count_of(:C)}
   let(:d_heads) {head_count_of(:D)}
-  let(:matrix) {matrix_store.to_table}
+  let(:matrix) {matrix_store.fetch.to_table}
   let(:matrix_store) { Qtrix::Matrix.new(redis) }
 
   # Check to make sure that the following holds true for 4, 10 and 100

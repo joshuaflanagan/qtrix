@@ -34,7 +34,7 @@ module Qtrix
         queue_store.clear!
         queue_store.map_queue_weights(queue_weights)
         matrix_store.update_matrix_to_satisfy_request!(`hostname`, rows)
-        breakdown(matrix_store.to_table)
+        breakdown(matrix_store.fetch.to_table)
       end
 
       def self.redis

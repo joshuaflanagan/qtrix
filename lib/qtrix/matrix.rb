@@ -65,13 +65,7 @@ module Qtrix
     ##
     # Returns all of the queues in the table.
     def fetch
-      reader.fetch
-    end
-
-    ##
-    # Fetches a matrix of simple queue names for each entry.
-    def to_table
-      reader.to_table
+      Model.new(@redis.lrange(REDIS_KEY, 0, -1).map{|dump| unpack(dump)})
     end
 
     ##

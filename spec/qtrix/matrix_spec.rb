@@ -12,14 +12,8 @@ describe Qtrix::Matrix do
 
   describe "#fetch" do
     it "should return the entire matrix as stored" do
-      result = matrix_store.fetch.map{|row| row.entries.map(&:queue)}.sort
+      result = matrix_store.fetch.to_table.sort
       result.should == [[:A, :B, :C]]
-    end
-  end
-
-  describe "#to_table" do
-    it "should return the rows of queue lists" do
-      matrix_store.to_table.should == [[:A, :B, :C]]
     end
   end
 
@@ -48,7 +42,7 @@ describe Qtrix::Matrix do
       # are requested.
       Qtrix.map_queue_weights A: 1, B: 1, C: 1, D: 1, E: 1
       matrix_store.update_matrix_to_satisfy_request!("host1", 100)
-      rows = matrix_store.to_table[5..-1]
+      rows = matrix_store.fetch.to_table[5..-1]
       dupes = Set.new
       while(current_row = rows.shift) do
         next if dupes.include? current_row

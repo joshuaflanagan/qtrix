@@ -25,7 +25,7 @@ describe Qtrix::OverrideStore do
 
     it "should blow away the matrix" do
       override_store.add(queues, 1)
-      matrix_store.to_table.should be_empty
+      matrix_store.fetch.to_table.should be_empty
     end
   end
 
@@ -38,7 +38,7 @@ describe Qtrix::OverrideStore do
 
     it "should blow away the matrix" do
       override_store.remove(queues, 100)
-      matrix_store.to_table.should be_empty
+      matrix_store.fetch.to_table.should be_empty
     end
   end
 
@@ -60,7 +60,7 @@ describe Qtrix::OverrideStore do
 
     it "should blow away the matrix" do
       override_store.clear_claims!
-      matrix_store.to_table.should be_empty
+      matrix_store.fetch.to_table.should be_empty
     end
   end
 
@@ -82,7 +82,7 @@ describe Qtrix::OverrideStore do
 
     it "should blow away the matrix" do
       override_store.clear!
-      matrix_store.to_table.should be_empty
+      matrix_store.fetch.to_table.should be_empty
     end
   end
 

@@ -9,6 +9,14 @@ module Qtrix
       def initialize(rows)
         @rows = rows
       end
+
+      def to_table
+        @rows.map{|row| row.entries.map(&:queue)}
+      end
+
+      def row_count
+        @rows.length
+      end
     end
 
     ##

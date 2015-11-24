@@ -20,7 +20,7 @@ describe Qtrix::Matrix do
 
       it "should populate the persistant model" do
         result = matrix_store.update_matrix_to_satisfy_request!('host1', 1)
-        result.should == matrix_store.to_table
+        result.should == matrix_store.fetch.to_table
       end
     end
 
@@ -28,19 +28,19 @@ describe Qtrix::Matrix do
       it "should maintain existing rows if no more needed" do
         matrix_store.update_matrix_to_satisfy_request!('host1', 1)
         matrix_store.update_matrix_to_satisfy_request!('host1', 1)
-        matrix_store.fetch.size.should == 1
+        matrix_store.fetch.row_count.should == 1
       end
 
       it "should add rows if more needed" do
         matrix_store.update_matrix_to_satisfy_request!('host1', 1)
         matrix_store.update_matrix_to_satisfy_request!('host1', 2)
-        matrix_store.fetch.size.should == 2
+        matrix_store.fetch.row_count.should == 2
       end
 
       it "should prune rows if less are needed" do
         matrix_store.update_matrix_to_satisfy_request!('host1', 2)
         matrix_store.update_matrix_to_satisfy_request!('host1', 1)
-        matrix_store.fetch.size.should == 1
+        matrix_store.fetch.row_count.should == 1
       end
     end
 
@@ -50,8 +50,8 @@ describe Qtrix::Matrix do
         matrix_store.update_matrix_to_satisfy_request!('host2', 2)
       end
 
-      let(:host1_rows) {matrix_store.fetch.select{|row| row.hostname == 'host1'}}
-      let(:host2_rows) {matrix_store.fetch.select{|row| row.hostname == 'host2'}}
+      let(:host1_rows) {matrix_store.fetch.rows.select{|row| row.hostname == 'host1'}}
+      let(:host2_rows) {matrix_store.fetch.rows.select{|row| row.hostname == 'host2'}}
 
       context "when rows are added" do
         it "should associate them with the specific host" do
