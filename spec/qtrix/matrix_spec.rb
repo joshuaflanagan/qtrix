@@ -4,7 +4,7 @@ require 'set'
 describe Qtrix::Matrix do
   before do
     queue_store.map_queue_weights(A: 3, B: 2, C: 1)
-    matrix_store.fetch_queues('host1', 1)
+    matrix_store.update_matrix_to_satisfy_request!('host1', 1)
   end
 
   let(:matrix_store) {Qtrix::Matrix.new(redis)}
@@ -30,9 +30,9 @@ describe Qtrix::Matrix do
     end
   end
 
-  describe "#fetch_queues" do
+  describe "#update_matrix_to_satisfy_request!" do
     it "should return an ordered list of queues for the given host" do
-      matrix_store.fetch_queues("host1", 1).should == [[:A, :B, :C]]
+      matrix_store.update_matrix_to_satisfy_request!("host1", 1).should == [[:A, :B, :C]]
     end
 
     it "should auto-shuffle distribution of queues if they all have the same weight" do
@@ -47,7 +47,7 @@ describe Qtrix::Matrix do
       # so an optimal algorithm would return 100 unique lists when 100 rows
       # are requested.
       Qtrix.map_queue_weights A: 1, B: 1, C: 1, D: 1, E: 1
-      matrix_store.fetch_queues("host1", 100)
+      matrix_store.update_matrix_to_satisfy_request!("host1", 100)
       rows = matrix_store.to_table[5..-1]
       dupes = Set.new
       while(current_row = rows.shift) do

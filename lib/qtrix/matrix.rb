@@ -57,9 +57,9 @@ module Qtrix
     ##
     # Obtain lists of queues for a number of worker processes
     # on a server identified by the hostname.
-    def fetch_queues(*args)
-      hostname, workers = *args
-      queue_picker.pick!(hostname, workers)
+    # Saves changes back to redis
+    def update_matrix_to_satisfy_request!(hostname, num_rows_requested)
+      queue_picker.modify_matrix_to_satisfy_request(hostname, num_rows_requested)
     end
 
     ##

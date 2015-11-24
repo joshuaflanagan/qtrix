@@ -160,7 +160,7 @@ module Qtrix
       overrides_queues = override_store.overrides_for(hostname, workers)
       debug("overrides for #{hostname}: #{overrides_queues}")
       delta = workers - overrides_queues.size
-      matrix_queues = delta > 0 ? matrix_store.fetch_queues(hostname, delta) : []
+      matrix_queues = delta > 0 ? matrix_store.update_matrix_to_satisfy_request!(hostname, delta) : []
       debug("matrix queue lists: #{matrix_queues}")
       new_result = overrides_queues + matrix_queues.map(&append_orchestrated_flag)
       info("queue lists changed") if new_result != @last_result

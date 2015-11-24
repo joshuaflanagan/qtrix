@@ -4,7 +4,7 @@ describe Qtrix::Matrix::Analyzer do
   before(:each) do
     Qtrix.map_queue_weights A: 40, B: 30, C: 20, D: 10
   end
-  let(:matrix) {Qtrix::Matrix.new(redis).fetch_queues("host1", 4)}
+  let(:matrix) {Qtrix::Matrix.new(redis).update_matrix_to_satisfy_request!("host1", 4)}
 
   describe "#breakdown" do
     it "returns a hash with queue name keys that reference counts by column" do

@@ -18,8 +18,8 @@ module Qtrix
         @redis = redis
       end
 
-      def pick!(hostname, workers)
-        delta = workers - rows_for_host(hostname).size
+      def modify_matrix_to_satisfy_request(hostname, num_rows_requested)
+        delta = num_rows_requested - rows_for_host(hostname).size
         if delta > 0
           generate(hostname, delta)
         elsif delta < 0

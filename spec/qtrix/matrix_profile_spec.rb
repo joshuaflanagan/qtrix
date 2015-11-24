@@ -50,8 +50,8 @@ describe Qtrix::Matrix do
           B: 30,
           C: 20,
           D: 10
-        matrix_store.fetch_queues('host1', worker_count)
-        matrix_store.fetch_queues('host2', worker_count)
+        matrix_store.update_matrix_to_satisfy_request!('host1', worker_count)
+        matrix_store.update_matrix_to_satisfy_request!('host2', worker_count)
       end
 
       it "should maintain the desired distribution of queues" do

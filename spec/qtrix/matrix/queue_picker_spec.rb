@@ -11,43 +11,43 @@ describe Qtrix::Matrix do
       D: 10
   end
 
-  describe "#fetch_queues" do
+  describe "#update_matrix_to_satisfy_request!" do
     context "with no rows" do
       it "should generate new rows" do
-        result = matrix_store.fetch_queues('host1', 1)
+        result = matrix_store.update_matrix_to_satisfy_request!('host1', 1)
         result.should == [[:A, :B, :C, :D]]
       end
 
       it "should populate the persistant model" do
-        result = matrix_store.fetch_queues('host1', 1)
+        result = matrix_store.update_matrix_to_satisfy_request!('host1', 1)
         result.should == matrix_store.to_table
       end
     end
 
     context "with existing rows" do
       it "should maintain existing rows if no more needed" do
-        matrix_store.fetch_queues('host1', 1)
-        matrix_store.fetch_queues('host1', 1)
+        matrix_store.update_matrix_to_satisfy_request!('host1', 1)
+        matrix_store.update_matrix_to_satisfy_request!('host1', 1)
         matrix_store.fetch.size.should == 1
       end
 
       it "should add rows if more needed" do
-        matrix_store.fetch_queues('host1', 1)
-        matrix_store.fetch_queues('host1', 2)
+        matrix_store.update_matrix_to_satisfy_request!('host1', 1)
+        matrix_store.update_matrix_to_satisfy_request!('host1', 2)
         matrix_store.fetch.size.should == 2
       end
 
       it "should prune rows if less are needed" do
-        matrix_store.fetch_queues('host1', 2)
-        matrix_store.fetch_queues('host1', 1)
+        matrix_store.update_matrix_to_satisfy_request!('host1', 2)
+        matrix_store.update_matrix_to_satisfy_request!('host1', 1)
         matrix_store.fetch.size.should == 1
       end
     end
 
     context "with multiple hosts" do
       before do
-        matrix_store.fetch_queues('host1', 2)
-        matrix_store.fetch_queues('host2', 2)
+        matrix_store.update_matrix_to_satisfy_request!('host1', 2)
+        matrix_store.update_matrix_to_satisfy_request!('host2', 2)
       end
 
       let(:host1_rows) {matrix_store.fetch.select{|row| row.hostname == 'host1'}}
@@ -55,7 +55,7 @@ describe Qtrix::Matrix do
 
       context "when rows are added" do
         it "should associate them with the specific host" do
-          matrix_store.fetch_queues('host1', 3)
+          matrix_store.update_matrix_to_satisfy_request!('host1', 3)
           host1_rows.size.should == 3
           host2_rows.size.should == 2
         end
@@ -63,7 +63,7 @@ describe Qtrix::Matrix do
 
       context "when rows are pruned" do
         it "should prune them from the specific host" do
-          matrix_store.fetch_queues('host2', 1)
+          matrix_store.update_matrix_to_satisfy_request!('host2', 1)
           host1_rows.size.should == 2
           host2_rows.size.should == 1
         end
