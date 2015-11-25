@@ -5,9 +5,8 @@ module Qtrix
     REDIS_KEY = :overrides
     REDIS_CLAIMS_KEY = :override_claims
 
-    def initialize(redis, matrix)
+    def initialize(redis)
       @redis = redis
-      @matrix = matrix
     end
 
     def add(*args)
@@ -17,7 +16,6 @@ module Qtrix
       processes.times do
         redis.rpush(REDIS_KEY, queues.join(","))
       end
-      matrix.clear!
     end
 
     def all
@@ -33,7 +31,6 @@ module Qtrix
       queues, processes = *args
       info("removing #{processes} overrides for #{queues.join(', ')}")
       redis.lrem(REDIS_KEY, processes, queues.join(","))
-      matrix.clear!
     end
 
     def clear!
@@ -43,7 +40,6 @@ module Qtrix
     end
 
     def clear_claims!
-      matrix.clear!
       debug("clearing overrides claimed")
       redis.del(REDIS_CLAIMS_KEY)
     end
@@ -57,7 +53,7 @@ module Qtrix
 
     private
 
-    attr_reader :redis, :matrix
+    attr_reader :redis
 
     def validate!(processes)
       raise "processes must be positive integer" unless processes > 0

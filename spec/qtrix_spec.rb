@@ -37,7 +37,7 @@ describe Qtrix do
     end
 
     let(:matrix_store) { Qtrix::Matrix.new(redis) }
-    let(:override_store) { Qtrix::OverrideStore.new(redis, matrix_store) }
+    let(:override_store) { Qtrix::OverrideStore.new(redis) }
     let(:default_overrides) {override_store.all.map{|o| o.queues}}
     let(:default_size) {override_store.all.size}
 

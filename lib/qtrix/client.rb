@@ -77,6 +77,7 @@ module Qtrix
     def add_override(queues, processes)
       with_lock do
         override_store.add(queues, processes)
+        matrix_store.clear!
         true
       end
     rescue Exception => e
@@ -96,6 +97,18 @@ module Qtrix
     def remove_override(queues, processes)
       with_lock do
         override_store.remove(queues, processes)
+        matrix_store.clear!
+        true
+      end
+    rescue Exception => e
+      error(e)
+      raise
+    end
+
+    def clear_overrides
+      with_lock do
+        override_store.clear!
+        matrix_store.clear!
         true
       end
     rescue Exception => e
@@ -169,7 +182,7 @@ module Qtrix
     end
 
     def override_store
-      @override_store ||= Qtrix::OverrideStore.new(redis, matrix_store)
+      @override_store ||= Qtrix::OverrideStore.new(redis)
     end
 
     def with_lock(*args, &block)

@@ -2,10 +2,9 @@ require 'spec_helper'
 
 describe Qtrix::OverrideStore do
   let(:queues) {[:a, :b, :c]}
-  let(:matrix_store) {Qtrix::Matrix.new(redis)}
   let(:default_overrides) {raw_redis.llen("qtrix:default:overrides")}
   let(:override_claims_key) {Qtrix::OverrideStore::REDIS_CLAIMS_KEY}
-  subject(:override_store) { Qtrix::OverrideStore.new(redis, matrix_store) }
+  subject(:override_store) { Qtrix::OverrideStore.new(redis) }
 
   describe "#add" do
     it "should persist the override" do
@@ -22,11 +21,6 @@ describe Qtrix::OverrideStore do
     it "should raise errors if the processes are zero" do
       expect{override_store.add(queues, 0)}.to raise_error
     end
-
-    it "should blow away the matrix" do
-      override_store.add(queues, 1)
-      matrix_store.fetch.to_table.should be_empty
-    end
   end
 
   describe "#remove" do
@@ -34,11 +28,6 @@ describe Qtrix::OverrideStore do
       override_store.add(queues, 1)
       override_store.remove(queues, 1)
       default_overrides.should == 0
-    end
-
-    it "should blow away the matrix" do
-      override_store.remove(queues, 100)
-      matrix_store.fetch.to_table.should be_empty
     end
   end
 
@@ -57,11 +46,6 @@ describe Qtrix::OverrideStore do
       override_store.clear_claims! 
       redis.exists(Qtrix::OverrideStore::REDIS_KEY).should == true
     end
-
-    it "should blow away the matrix" do
-      override_store.clear_claims!
-      matrix_store.fetch.to_table.should be_empty
-    end
   end
 
   describe "#clear!" do
@@ -78,11 +62,6 @@ describe Qtrix::OverrideStore do
     it "should drop override claim data from redis" do
       override_store.clear!
       redis.exists(Qtrix::OverrideStore::REDIS_CLAIMS_KEY).should_not == true
-    end
-
-    it "should blow away the matrix" do
-      override_store.clear!
-      matrix_store.fetch.to_table.should be_empty
     end
   end
 
