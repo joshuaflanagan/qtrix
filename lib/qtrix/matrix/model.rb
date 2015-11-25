@@ -1,13 +1,13 @@
 require 'bigdecimal'
-require 'qtrix/matrix/common'
 
 module Qtrix
   class Matrix
-
     class Model
-      attr_reader :rows
+      attr_reader :rows, :added_rows, :deleted_rows
       def initialize(rows)
         @rows = rows
+        @added_rows = []
+        @deleted_rows = []
       end
 
       def to_table
@@ -16,6 +16,24 @@ module Qtrix
 
       def row_count
         @rows.length
+      end
+
+      def rows_for_host(hostname)
+        @rows.select{|row| row.hostname == hostname}
+      end
+
+      def add_row(row)
+        @added_rows << row
+        @rows << row
+      end
+
+      def remove_row_for_host(hostname)
+        index_to_remove = @rows.rindex{|row| row.hostname == hostname}
+        # raise if no row found?
+        return unless index_to_remove
+        removed_row = @rows.delete_at(index_to_remove)
+        deleted_rows << removed_row
+        removed_row
       end
     end
 

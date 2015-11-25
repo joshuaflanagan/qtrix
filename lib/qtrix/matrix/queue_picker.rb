@@ -9,23 +9,21 @@ module Qtrix
     # prune old lists as they are no longer needed, maintaining a row
     # in the matrix for the number of workers for the host.
     class QueuePicker
-      include Common
       include Logging
 
-      def initialize(matrix, reader, redis)
+      def initialize(matrix, desired_distribution)
         @matrix = matrix
-        @reader = reader
-        @redis = redis
+        @desired_distribution = desired_distribution
       end
 
       def modify_matrix_to_satisfy_request(hostname, num_rows_requested)
-        delta = num_rows_requested - rows_for_host(hostname).size
+        delta = num_rows_requested - @matrix.rows_for_host(hostname).size
         if delta > 0
           generate(hostname, delta)
         elsif delta < 0
           prune(hostname, delta)
         end
-        rows_for_host(hostname).map(&to_queues).tap do |rows|
+        @matrix.rows_for_host(hostname).map(&to_queues).tap do |rows|
           debug("matrix rows for #{hostname}: #{rows}")
         end
       end
@@ -35,20 +33,15 @@ module Qtrix
         lambda {|row| row.entries.map(&:queue)}
       end
 
-      def rows_for_host(hostname)
-        @reader.rows_for_host(hostname)
-      end
-
       def generate(hostname, count)
-        row_builder = RowBuilder.new(@redis, @matrix.fetch, Qtrix.desired_distribution)
+        row_builder = RowBuilder.new(@matrix, @desired_distribution)
         row_builder.build(hostname, count)
       end
 
       def prune(hostname, count)
         count.abs.times.each do
-          row = rows_for_host(hostname).pop
-          debug("pruning from matrix: #{row}")
-          @redis.lrem(REDIS_KEY, -2, pack(row))
+          removed_row = @matrix.remove_row_for_host(hostname)
+          debug("pruning from matrix: #{removed_row}")
         end
       end
     end

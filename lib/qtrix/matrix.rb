@@ -1,8 +1,6 @@
 require 'bigdecimal'
-require 'qtrix/matrix/common'
 require 'qtrix/matrix/model'
 require 'qtrix/matrix/queue_picker'
-require 'qtrix/matrix/reader'
 require 'qtrix/matrix/row_builder'
 require 'qtrix/matrix/queue_prioritizer'
 require 'qtrix/matrix/analyzer'
@@ -47,8 +45,8 @@ module Qtrix
   # priority for the next generated list.
 
   class Matrix
-    include Common
     include Logging
+    REDIS_KEY = :matrix
 
     def initialize(redis)
       @redis = redis
@@ -59,7 +57,13 @@ module Qtrix
     # on a server identified by the hostname.
     # Saves changes back to redis
     def update_matrix_to_satisfy_request!(hostname, num_rows_requested)
-      queue_picker.modify_matrix_to_satisfy_request(hostname, num_rows_requested)
+      matrix = fetch
+      queue_picker = QueuePicker.new(matrix, Qtrix.desired_distribution)
+      requested_rows = queue_picker.modify_matrix_to_satisfy_request(hostname, num_rows_requested)
+
+      matrix.added_rows.each{|row| redis.rpush(REDIS_KEY, pack(row))}
+      matrix.deleted_rows.each{|row| redis.lrem(REDIS_KEY, -1, pack(row))}
+      requested_rows
     end
 
     ##
@@ -79,12 +83,14 @@ module Qtrix
 
     attr_reader :redis
 
-    def reader
-      @reader ||= Reader.new(redis)
+    def pack(item)
+      # Marshal is fast but not human readable, might want to
+      # go for json or yaml. This is fast at least.
+      Marshal.dump(item)
     end
 
-    def queue_picker
-      @queue_picker ||= QueuePicker.new(self, reader, redis)
+    def unpack(item)
+      Marshal.restore(item)
     end
   end
 end

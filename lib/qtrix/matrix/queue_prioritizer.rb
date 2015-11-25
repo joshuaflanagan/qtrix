@@ -1,6 +1,3 @@
-require 'bigdecimal'
-require 'qtrix/matrix/common'
-
 module Qtrix
   class Matrix
     ##
