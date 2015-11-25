@@ -16,7 +16,6 @@ module Qtrix
     def clear!
       info("clearing queue weights")
       redis.del Queue::REDIS_KEY
-      matrix_store.clear!
     end
 
 
@@ -53,10 +52,6 @@ module Qtrix
     private
 
     attr_reader :redis
-
-    def matrix_store
-      @matrix_store ||= Matrix.new(redis)
-    end
 
     def validate_queue(name, weight)
       raise "nil name" if name.nil?

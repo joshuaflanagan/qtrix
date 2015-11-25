@@ -1,7 +1,6 @@
 require 'spec_helper'
 
 describe Qtrix::QueueStore do
-  let(:matrix_store) {Qtrix::Matrix.new(redis)}
   subject(:queue_store) { Qtrix::QueueStore.new(redis) }
 
   before(:each) do
@@ -37,15 +36,6 @@ describe Qtrix::QueueStore do
 
     it "should error when trying to save weight of > 1000" do
       expect{queue_store.map_queue_weights(d: 1000)}.to raise_error
-    end
-
-    it "should blow away the matrix" do
-      matrix_store.update_matrix_to_satisfy_request!('host1', 1)
-      matrix_store.fetch.to_table.should_not be_empty
-      queue_store.map_queue_weights \
-        A: 1,
-        B: 2
-      matrix_store.fetch.to_table.should be_empty
     end
   end
 
@@ -83,10 +73,6 @@ describe Qtrix::QueueStore do
     before(:each) {queue_store.clear!}
     it "should remove all existing queue weights" do
       redis.exists(Qtrix::Queue::REDIS_KEY).should_not == true
-    end
-
-    it "should blow away the matrix" do
-      matrix_store.fetch.to_table.should be_empty
     end
   end
 end

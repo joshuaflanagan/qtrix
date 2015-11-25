@@ -57,6 +57,7 @@ module Qtrix
 
     def map_queue_weights(map)
       with_lock do
+        matrix_store.clear!
         queue_store.map_queue_weights(map)
       end
     rescue Exception => e
