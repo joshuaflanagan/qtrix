@@ -25,6 +25,12 @@ module Qtrix
 
       private
 
+      def relative_weights
+        @relative_weights ||= desired_distribution.each_with_object({}){|queue,all|
+          all[queue.name] = queue.relative_weight
+        }
+      end
+
       def build_row_for!(hostname, queues)
         row = Row.new(hostname, [])
         queues.each do |queue|
@@ -38,7 +44,6 @@ module Qtrix
       def build_entry(row, queue, entry_val)
         entry = Entry.new(
           queue.name,
-          queue.relative_weight,
           entry_val
         )
         all_entries << entry
@@ -50,7 +55,7 @@ module Qtrix
       USE_BIG_DECIMAL = (RUBY_VERSION[0] == "1")
 
       def next_val_for(row)
-        raw_result = 1.0 - sum_of_resource_percentages_for(row.entries)
+        raw_result = 1.0 - sum_of_relative_weights(row.entries)
         if USE_BIG_DECIMAL
           require 'bigdecimal'
           BigDecimal.new(raw_result, 4)
@@ -59,8 +64,8 @@ module Qtrix
         end
       end
 
-      def sum_of_resource_percentages_for(entries)
-        entries.inject(0) {|memo, entry| memo + entry.resource_percentage}
+      def sum_of_relative_weights(entries)
+        entries.inject(0) {|memo, entry| memo + relative_weights[entry.queue]}
       end
 
     end

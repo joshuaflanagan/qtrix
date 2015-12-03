@@ -40,9 +40,9 @@ module Qtrix
     ##
     # An entry (or cell) in the matrix, contains a single queue and its value
     # relative to the other entries to the left in the same row.
-    Entry = Struct.new(:queue, :resource_percentage, :value) do
+    Entry = Struct.new(:queue, :value) do
       def to_s
-        "#{queue}(#{value},#{resource_percentage})"
+        "#{queue}(#{value})"
       end
     end
 
