@@ -1,5 +1,5 @@
 module Qtrix
-  module Matrix
+  class Matrix
     ##
     # Utility class to examining the distribution of queues
     # within a matrix.  Its operations result in a hash of
@@ -30,11 +30,23 @@ module Qtrix
       # with the specified number of rows, then breaks it down
       # as above.
       def self.analyze!(rows, queue_weights={})
-        Qtrix::Matrix.clear!
-        Qtrix::Queue.clear!
-        Qtrix::Queue.map_queue_weights(queue_weights)
-        Qtrix::Matrix.fetch_queues(`hostname`, rows)
-        breakdown(Qtrix::Matrix.to_table)
+        matrix_store.clear!
+        queue_store.clear!
+        queue_store.map_queue_weights(queue_weights)
+        matrix_store.update_matrix_to_satisfy_request!(`hostname`, rows)
+        breakdown(matrix_store.fetch.to_table)
+      end
+
+      def self.redis
+        @redis ||= Persistence.redis
+      end
+
+      def self.queue_store
+        @queue_store ||= QueueStore.new(redis)
+      end
+
+      def self.matrix_store
+        @matrix_store ||= Matrix.new(redis)
       end
 
       private

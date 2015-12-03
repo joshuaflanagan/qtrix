@@ -1,40 +1,29 @@
-require 'qtrix/matrix/common'
-
 module Qtrix
-  module Matrix
-    include Qtrix::Logging
-
+  class Matrix
     ##
     # Carries out the construction of rows within the matrix for a number of
     # workers for a specific hostname.
     class RowBuilder
-      include Matrix::Common
       include Qtrix::Logging
       attr_reader :hostname, :workers, :matrix,
                   :desired_distribution, :heads, :all_entries
 
-      def initialize(*args)
-        @hostname, @workers = *args
-        @matrix = Qtrix::Matrix.fetch
-        @desired_distribution = Qtrix.desired_distribution
-        @heads = matrix.map{|row| row.entries.first.queue}
-        @all_entries = matrix.map(&:entries).flatten
+      def initialize(matrix, desired_distribution)
+        @matrix = matrix
+        @desired_distribution = desired_distribution
+        @heads = matrix.rows.map{|row| row.entries.first.queue}
+        @all_entries = matrix.rows.map(&:entries).flatten
       end
 
-      def build
-        [].tap do |result|
-          workers.times.each do
-            queues_for_row = queue_prioritizer.current_priority_queue
-            build_row_for! hostname, queues_for_row
-            result << queues_for_row.map(&:name)
-          end
+      def build(hostname, workers)
+        workers.times.each do
+          prioritizer = QueuePrioritizer.new(desired_distribution, heads, all_entries)
+          queues_for_row = prioritizer.current_priority_queue
+          build_row_for! hostname, queues_for_row
         end
       end
 
       private
-      def queue_prioritizer
-        QueuePrioritizer.new(desired_distribution, heads, all_entries)
-      end
 
       def build_row_for!(hostname, queues)
         row = Row.new(hostname, [])
@@ -42,9 +31,8 @@ module Qtrix
           build_entry(row, queue, next_val_for(row))
         end
         heads << row.entries[0].queue
-        store(row)
+        @matrix.add_row(row)
         debug("built row for matrix: #{row}")
-        true
       end
 
       def build_entry(row, queue, entry_val)
@@ -75,9 +63,6 @@ module Qtrix
         entries.inject(0) {|memo, entry| memo + entry.resource_percentage}
       end
 
-      def store(row)
-        Persistence.redis.rpush(REDIS_KEY, pack(row))
-      end
     end
   end
 end

@@ -2,10 +2,14 @@
 # Provides a mechanism of distributed locking according to
 # the algorithm outlined here: http://redis.io/commands/setnx
 module Qtrix
-  module Locking
+  class Locking
     include Qtrix::Logging
     LOCK = :lock
     DEFAULT_TIMEOUT = 10
+
+    def initialize(redis)
+      @redis = redis
+    end
 
     ##
     # Attempts to obtain a global qtrix lock and if its obtained,
@@ -36,6 +40,9 @@ module Qtrix
     end
 
     private
+
+    attr_reader :redis
+
     def invoke_then_release_lock(&block)
       block.call
     ensure
@@ -43,7 +50,7 @@ module Qtrix
     end
 
     def release_lock
-      Persistence.redis.del(LOCK)
+      redis.del(LOCK)
       debug("Lock released")
     end
 
@@ -54,11 +61,11 @@ module Qtrix
 
     def aquire_lock
       result = false
-      if Persistence.redis.setnx(LOCK, lock_value)
+      if redis.setnx(LOCK, lock_value)
         debug("Lock aquired")
         result = true
-      elsif now_has_surpassed(Persistence.redis.get(LOCK))
-        if now_has_surpassed(Persistence.redis.getset(LOCK, lock_value))
+      elsif now_has_surpassed(redis.get(LOCK))
+        if now_has_surpassed(redis.getset(LOCK, lock_value))
           debug("Lock aquired")
           result = true
         else

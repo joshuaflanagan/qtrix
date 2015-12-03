@@ -1,7 +1,7 @@
 require 'bigdecimal'
 
 module Qtrix
-  module Matrix
+  class Matrix
     ##
     # Responsible for picking a number of queue lists from the matrix
     # for a specific host.  Will return already picked lists if they
@@ -9,22 +9,21 @@ module Qtrix
     # prune old lists as they are no longer needed, maintaining a row
     # in the matrix for the number of workers for the host.
     class QueuePicker
-      include Common
       include Logging
-      attr_reader :reader, :hostname, :workers
 
-      def initialize(*args)
-        @reader, @hostname, @workers = *args
+      def initialize(matrix, desired_distribution)
+        @matrix = matrix
+        @desired_distribution = desired_distribution
       end
 
-      def pick!
-        delta = workers - rows_for_host.size
+      def modify_matrix_to_satisfy_request(hostname, num_rows_requested)
+        delta = num_rows_requested - @matrix.rows_for_host(hostname).size
         if delta > 0
-          generate(delta)
+          generate(hostname, delta)
         elsif delta < 0
-          prune(delta)
+          prune(hostname, delta)
         end
-        rows_for_host.map(&to_queues).tap do |rows|
+        @matrix.rows_for_host(hostname).map(&to_queues).tap do |rows|
           debug("matrix rows for #{hostname}: #{rows}")
         end
       end
@@ -34,19 +33,15 @@ module Qtrix
         lambda {|row| row.entries.map(&:queue)}
       end
 
-      def rows_for_host
-        reader.rows_for_host(hostname)
+      def generate(hostname, count)
+        row_builder = RowBuilder.new(@matrix, @desired_distribution)
+        row_builder.build(hostname, count)
       end
 
-      def generate(count)
-        RowBuilder.new(hostname, count).build
-      end
-
-      def prune(count)
+      def prune(hostname, count)
         count.abs.times.each do
-          row = rows_for_host.pop
-          debug("pruning from matrix: #{row}")
-          Persistence.redis.lrem(REDIS_KEY, -2, pack(row))
+          removed_row = @matrix.remove_row_for_host(hostname)
+          debug("pruning from matrix: #{removed_row}")
         end
       end
     end

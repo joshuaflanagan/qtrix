@@ -5,13 +5,14 @@ describe Qtrix do
   describe "#desired_distribution" do
     let(:desired_dist) {Qtrix.desired_distribution}
     let(:qtrix_queues) {Set.new(desired_dist.map(&:name)).to_a}
+    let(:queue_store) {Qtrix::QueueStore.new(redis)}
 
     before do
-      Qtrix::Queue.map_queue_weights(A: 3, B: 2, C: 1)
+      queue_store.map_queue_weights(A: 3, B: 2, C: 1)
     end
 
     it "should include the list of known queues" do
-      known_queues = Qtrix::Queue.all_queues
+      known_queues = queue_store.all_queues
       known_queues.should_not be_empty
       Qtrix.desired_distribution.should == known_queues
     end
@@ -32,11 +33,13 @@ describe Qtrix do
 
   describe "override methods" do
     def override_counts
-      [Qtrix::Override.all.size]
+      [override_store.all.size]
     end
 
-    let(:default_overrides) {Qtrix::Override.all.map{|o| o.queues}}
-    let(:default_size) {Qtrix::Override.all.size}
+    let(:matrix_store) { Qtrix::Matrix.new(redis) }
+    let(:override_store) { Qtrix::OverrideStore.new(redis) }
+    let(:default_overrides) {override_store.all.map{|o| o.queues}}
+    let(:default_size) {override_store.all.size}
 
     describe "#add_override" do
       it "should persist the override to redis" do
@@ -63,7 +66,7 @@ describe Qtrix do
   end
 
   describe "#fetch_queues" do
-    let(:override_claims_key) {Qtrix::Override::REDIS_CLAIMS_KEY}
+    let(:override_claims_key) {Qtrix::OverrideStore::REDIS_CLAIMS_KEY}
     context "with queue weightings" do
       before(:each) do
         Qtrix.map_queue_weights \
@@ -75,7 +78,7 @@ describe Qtrix do
 
       it "should treat the request as a ping from the host" do
         Qtrix.fetch_queues('host1', 1)
-        Qtrix::HostManager.all.should == ['host1']
+        Qtrix.known_hosts.should == ['host1']
       end
 
       it "should return previous results if it cannot obtain a lock" do
@@ -186,8 +189,8 @@ describe Qtrix do
 
   describe "#clear!" do
     let(:queue_key) {Qtrix::Queue::REDIS_KEY}
-    let(:override_key) {Qtrix::Override::REDIS_KEY}
-    let(:override_claims_key) {Qtrix::Override::REDIS_CLAIMS_KEY}
+    let(:override_key) {Qtrix::OverrideStore::REDIS_KEY}
+    let(:override_claims_key) {Qtrix::OverrideStore::REDIS_CLAIMS_KEY}
     let(:matrix_key) {Qtrix::Matrix::REDIS_KEY}
     let(:known_hosts_key) {Qtrix::HostManager::REDIS_KEY}
 

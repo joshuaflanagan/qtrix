@@ -1,8 +1,6 @@
 require 'bigdecimal'
-require 'qtrix/matrix/common'
 require 'qtrix/matrix/model'
 require 'qtrix/matrix/queue_picker'
-require 'qtrix/matrix/reader'
 require 'qtrix/matrix/row_builder'
 require 'qtrix/matrix/queue_prioritizer'
 require 'qtrix/matrix/analyzer'
@@ -46,37 +44,53 @@ module Qtrix
   # This ensures that the higher a queue appears in a list, the lower its
   # priority for the next generated list.
 
-  module Matrix
-    include Common
-    extend Logging
+  class Matrix
+    include Logging
+    REDIS_KEY = :matrix
 
-    class << self
-      ##
-      # Obtain lists of queues for a number of worker processes
-      # on a server identified by the hostname.
-      def fetch_queues(*args)
-        hostname, workers = *args
-        QueuePicker.new(Reader, hostname, workers).pick!
-      end
+    def initialize(redis)
+      @redis = redis
+    end
 
-      ##
-      # Returns all of the queues in the table.
-      def fetch
-        Reader.fetch
-      end
+    ##
+    # Obtain lists of queues for a number of worker processes
+    # on a server identified by the hostname.
+    # Saves changes back to redis
+    def update_matrix_to_satisfy_request!(hostname, num_rows_requested)
+      matrix = fetch
+      queue_picker = QueuePicker.new(matrix, Qtrix.desired_distribution)
+      requested_rows = queue_picker.modify_matrix_to_satisfy_request(hostname, num_rows_requested)
 
-      ##
-      # Fetches a matrix of simple queue names for each entry.
-      def to_table
-        Reader.to_table
-      end
+      matrix.added_rows.each{|row| redis.rpush(REDIS_KEY, pack(row))}
+      matrix.deleted_rows.each{|row| redis.lrem(REDIS_KEY, -1, pack(row))}
+      requested_rows
+    end
 
-      ##
-      # Clears the matrix so its rebuilt again when rows are requested.
-      def clear!
-        debug("what if I told you I was clearing the matrix?")
-        Persistence.redis.del(REDIS_KEY)
-      end
+    ##
+    # Returns all of the queues in the table.
+    def fetch
+      Model.new(@redis.lrange(REDIS_KEY, 0, -1).map{|dump| unpack(dump)})
+    end
+
+    ##
+    # Clears the matrix so its rebuilt again when rows are requested.
+    def clear!
+      debug("what if I told you I was clearing the matrix?")
+      redis.del(REDIS_KEY)
+    end
+
+    private
+
+    attr_reader :redis
+
+    def pack(item)
+      # Marshal is fast but not human readable, might want to
+      # go for json or yaml. This is fast at least.
+      Marshal.dump(item)
+    end
+
+    def unpack(item)
+      Marshal.restore(item)
     end
   end
 end

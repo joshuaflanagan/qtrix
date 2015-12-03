@@ -2,28 +2,29 @@ require 'spec_helper'
 
 describe Qtrix::HostManager do
   let(:redis_key) {Qtrix::HostManager::REDIS_KEY}
+  subject(:host_manager) { Qtrix::HostManager.new(redis) }
 
   describe "#ping" do
     it "should store the hostname in a sorted set in redis" do
-      Qtrix::HostManager.ping("localhost")
+      host_manager.ping("localhost")
       redis.zcard(redis_key).should == 1
     end
 
     it "should store only one value per host" do
-      Qtrix::HostManager.ping("localhost")
-      Qtrix::HostManager.ping("localhost")
+      host_manager.ping("localhost")
+      host_manager.ping("localhost")
       redis.zcard(redis_key).should == 1
-      Qtrix::HostManager.ping("blah")
-      Qtrix::HostManager.ping("blah")
+      host_manager.ping("blah")
+      host_manager.ping("blah")
       redis.zcard(redis_key).should == 2
     end
   end
 
   describe "#clear!" do
     it "should clear any previously stored hosts" do
-      Qtrix::HostManager.ping("localhost")
+      host_manager.ping("localhost")
       redis.zcard(redis_key).should == 1
-      Qtrix::HostManager.clear!
+      host_manager.clear!
       redis.zcard(redis_key).should == 0
     end
   end
@@ -31,67 +32,67 @@ describe Qtrix::HostManager do
   context "no hosts have checked in" do
     describe "#all" do
       it "should return empty array" do
-        Qtrix::HostManager.all.should == []
+        host_manager.all.should == []
       end
     end
 
     describe "#offline" do
       it "should return empty array" do
-        Qtrix::HostManager.offline.should == []
+        host_manager.offline.should == []
       end
     end
 
     describe "#any_offline?" do
       it "should return false" do
-        Qtrix::HostManager.any_offline?.should be_false
+        host_manager.any_offline?.should be_false
       end
     end
   end
 
   context "host has checked in recently" do
-    before {Qtrix::HostManager.ping("localhost")}
+    before {host_manager.ping("localhost")}
 
     describe "#all" do
       it "should return array of hosts that have checked in" do
-        Qtrix::HostManager.all.should == ['localhost']
+        host_manager.all.should == ['localhost']
       end
     end
 
     describe "#offline" do
       it "should return empty array" do
-        Qtrix::HostManager.offline.should == []
+        host_manager.offline.should == []
       end
     end
 
     describe "#any_offline?" do
       it "should return false" do
-        Qtrix::HostManager.any_offline?.should be_false
+        host_manager.any_offline?.should be_false
       end
     end
   end
 
   context "host has not checked in recently" do
     before do
-      Qtrix::HostManager.ping("localhost")
+      host_manager.ping("localhost")
       redis_time = Qtrix::Persistence.redis_time
       Qtrix::Persistence.stub(:redis_time) {redis_time + 121}
     end
 
     describe "#all" do
       it "should return array of all hosts that have checked in" do
-        Qtrix::HostManager.all.should == ["localhost"]
+        host_manager.all.should == ["localhost"]
       end
     end
 
     describe "#offline" do
       it "should return array containing tardy hosts" do
-        Qtrix::HostManager.offline.should == ["localhost"]
+        host_manager.offline.should == ["localhost"]
       end
     end
 
     describe "#has_hosts_oflfine?" do
       it "should return true" do
-        Qtrix::HostManager.any_offline?.should be_true
+        host_manager.any_offline?.should be_true
       end
     end
   end

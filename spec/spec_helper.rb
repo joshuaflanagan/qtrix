@@ -18,15 +18,3 @@ end
 def redis
   Qtrix::Persistence.redis
 end
-
-shared_context "an established matrix" do
-  before do
-    Qtrix::Queue.map_queue_weights \
-      A: 40,
-      B: 30,
-      C: 20,
-      D: 10
-    Qtrix::Matrix.fetch_queues('host1', 4)
-  end
-  let(:matrix) {Qtrix::Matrix}
-end
